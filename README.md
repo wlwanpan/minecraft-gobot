@@ -1,6 +1,6 @@
 # minecraft-gobot
 
-minecraft-gobot is a set of tools (launchder + bot) to run a discord-bot that help manage your minecraft server on AWS.
+minecraft-gobot is a set of tools (launcher + bot) to run a discord-bot that help manage your minecraft server on AWS.
 
 - launcher: grpc server that launches the minecraft server (server.jar) and interacts with its stdin/stdout for executing your regular minecraft server console commands.
 
@@ -15,7 +15,7 @@ go run main.go bot
 go run main.go launcher
 ```
 
-## Setting up you AWS instances
+## Setting up your AWS instances
 TODO: complete doc
 
 ## Setting up your credentials
