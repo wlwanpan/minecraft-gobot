@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/wlwanpan/minecraft-manager/messages"
+	"github.com/wlwanpan/minecraft-gobot/messages"
 	"google.golang.org/grpc"
 )
 
@@ -120,6 +120,8 @@ func (bot *Bot) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate)
 		return
 	}
 
+	log.Printf("Recv cmd: %s", m.Content)
+
 	// Pipe out incoming commands.
 	switch m.Content {
 	case "start":
@@ -206,7 +208,10 @@ func (bot *Bot) statusCmd(s *discordgo.Session, m *discordgo.MessageCreate) {
 	status, err := bot.launcherClient.client.Status(context.Background(), &messages.EmptyReq{})
 	if err != nil {
 		sendMessageToChannel(s, m.ChannelID, err.Error())
+		return
 	}
+
+	log.Printf("launcher status: %s", status.GetMessage())
 
 	message := fmt.Sprintf("Server status: %s", status.GetMessage())
 	sendMessageToChannel(s, m.ChannelID, message)

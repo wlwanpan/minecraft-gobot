@@ -1,4 +1,4 @@
-# minecraft-gobot
+# minecraft-gobot (WIP)
 
 minecraft-gobot is a set of tools (launcher + bot) to run a discord-bot that help manage your minecraft server on AWS.
 

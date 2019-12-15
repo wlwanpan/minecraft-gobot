@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/akamensky/argparse"
-	"github.com/wlwanpan/minecraft-manager/bot"
-	"github.com/wlwanpan/minecraft-manager/launcher"
+	"github.com/wlwanpan/minecraft-gobot/bot"
+	"github.com/wlwanpan/minecraft-gobot/launcher"
 )
 
 func main() {

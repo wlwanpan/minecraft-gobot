@@ -7,7 +7,7 @@ import (
 	"log"
 	"net"
 
-	"github.com/wlwanpan/minecraft-manager/messages"
+	"github.com/wlwanpan/minecraft-gobot/messages"
 	"google.golang.org/grpc"
 )
 
