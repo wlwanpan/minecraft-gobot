@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/wlwanpan/minecraft-gobot/messages"
+	"github.com/wlwanpan/minecraft-gobot/services"
 	"google.golang.org/grpc"
 )
 
@@ -25,18 +25,11 @@ var (
 const (
 	LAUNCHER_INSTANCE_ADDR        = "ec2-35-182-195-210.ca-central-1.compute.amazonaws.com:7777"
 	THE_BRAIN_CHANNEL_ID   string = "654873630806769674"
-
-	LAUNCHER_INITIALIZED launcherClientState = iota
-	LAUNCHER_CONNECTED
-	LAUNCHER_DISCONNECTED
 )
 
-type launcherClientState int
-
 type launcherClient struct {
-	state    launcherClientState
 	grpcConn *grpc.ClientConn
-	client   messages.CmdServiceClient
+	client   services.LauncherServiceClient
 }
 
 func (c *launcherClient) initConn() error {
@@ -45,8 +38,7 @@ func (c *launcherClient) initConn() error {
 		return err
 	}
 	c.grpcConn = conn
-	c.client = messages.NewCmdServiceClient(conn)
-	c.state = LAUNCHER_CONNECTED
+	c.client = services.NewLauncherServiceClient(conn)
 	return nil
 }
 
@@ -55,15 +47,10 @@ func (c *launcherClient) closeConn() {
 		log.Println("error closing conn: grpc conn must be open")
 		return
 	}
-	if c.state != LAUNCHER_CONNECTED {
-		log.Println("error closing conn: client not in connected state")
-		return
-	}
 	if err := c.grpcConn.Close(); err != nil {
 		log.Printf("error closing conn: %s", err)
 		return
 	}
-	c.state = LAUNCHER_DISCONNECTED
 }
 
 type Bot struct {
@@ -74,9 +61,7 @@ type Bot struct {
 
 func New() *Bot {
 	return &Bot{
-		launcherClient: &launcherClient{
-			state: LAUNCHER_INITIALIZED,
-		},
+		launcherClient: &launcherClient{},
 	}
 }
 
@@ -145,7 +130,7 @@ func (bot *Bot) launchCmd(s *discordgo.Session, m *discordgo.MessageCreate) {
 	defer bot.launcherClient.closeConn()
 
 	c := bot.launcherClient.client
-	config := &messages.LaunchConfig{
+	config := &services.LaunchConfig{
 		MemAlloc: 1,
 	}
 	resp, err := c.Launch(context.Background(), config)
@@ -166,7 +151,7 @@ func (bot *Bot) launchCmd(s *discordgo.Session, m *discordgo.MessageCreate) {
 		case <-done:
 			return
 		case <-ticker.C:
-			resp, err := c.Status(context.Background(), &messages.EmptyReq{})
+			resp, err := c.Status(context.Background(), &services.EmptyReq{})
 			if err != nil {
 				log.Println(err)
 				done <- true
@@ -189,7 +174,7 @@ func (bot *Bot) closeCmd(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	defer bot.launcherClient.closeConn()
 
-	resp, err := bot.launcherClient.client.Stop(context.Background(), &messages.EmptyReq{})
+	resp, err := bot.launcherClient.client.Stop(context.Background(), &services.EmptyReq{})
 	if err != nil {
 		sendMessageToChannel(s, m.ChannelID, err.Error())
 		return
@@ -205,15 +190,15 @@ func (bot *Bot) statusCmd(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	defer bot.launcherClient.closeConn()
 
-	status, err := bot.launcherClient.client.Status(context.Background(), &messages.EmptyReq{})
+	status, err := bot.launcherClient.client.Status(context.Background(), &services.EmptyReq{})
 	if err != nil {
 		sendMessageToChannel(s, m.ChannelID, err.Error())
 		return
 	}
 
-	log.Printf("launcher status: %s", status.GetMessage())
+	log.Printf("launcher status: %s", status.GetServerState())
 
-	message := fmt.Sprintf("Server status: %s", status.GetMessage())
+	message := fmt.Sprintf("Server status: %s", status.GetServerState())
 	sendMessageToChannel(s, m.ChannelID, message)
 }
 
