@@ -1,0 +1,20 @@
+syntax = "proto3";
+package messages;
+
+message EmptyReq {}
+
+message ServiceResp {
+  int64 request_id = 1;
+  int64 status = 2;
+  string message = 3;
+}
+
+message LaunchConfig {
+  int64 mem_alloc = 1;
+}
+
+service CmdService {
+  rpc Launch(LaunchConfig) returns (ServiceResp) {}
+  rpc Stop(EmptyReq) returns (ServiceResp) {}
+  rpc Status(EmptyReq) returns (ServiceResp) {}
+}
