@@ -131,7 +131,7 @@ func (bot *Bot) launchCmd(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	c := bot.launcherClient.client
 	config := &services.LaunchConfig{
-		MemAlloc: 1,
+		MemAlloc: 3,
 	}
 	resp, err := c.Launch(context.Background(), config)
 	if err != nil {
@@ -198,7 +198,7 @@ func (bot *Bot) statusCmd(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	log.Printf("launcher status: %s", status.GetServerState())
 
-	message := fmt.Sprintf("Server status: %s", status.GetServerState())
+	message := fmt.Sprintf("Server status: %s\n%s", status.GetServerState(), status.GetMessage())
 	sendMessageToChannel(s, m.ChannelID, message)
 }
 

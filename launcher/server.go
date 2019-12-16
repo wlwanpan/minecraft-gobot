@@ -18,7 +18,11 @@ const (
 )
 
 var (
-	ErrLauncherOffline = errors.New("launcher is offline")
+	ErrCurrentlyOffline = errors.New("server is currently offline")
+
+	ErrStillLoading = errors.New("server is still loading")
+
+	ErrAlreadyLaunched = errors.New("server is already running")
 )
 
 type grpcService struct {
@@ -42,11 +46,20 @@ func (s *grpcService) Status(ctx context.Context, _ *services.EmptyReq) (*servic
 
 	return &services.StatusResp{
 		ServerState: state,
-		Message:     "",
+		Message:     s.launcher.lastestLog,
 	}, nil
 }
 
 func (s *grpcService) Launch(ctx context.Context, config *services.LaunchConfig) (*services.ServiceResp, error) {
+	if s.launcher != nil {
+		switch s.launcher.currState {
+		case LAUNCHER_STATE_LOADING:
+			return nil, ErrStillLoading
+		case LAUNCHER_STATE_READY:
+			return nil, ErrAlreadyLaunched
+		}
+	}
+
 	memAlloc := config.GetMemAlloc()
 	s.launcher = newLauncher(int(memAlloc))
 	if err := s.launcher.Launch(ctx); err != nil {
@@ -60,11 +73,16 @@ func (s *grpcService) Launch(ctx context.Context, config *services.LaunchConfig)
 
 func (s *grpcService) Stop(ctx context.Context, _ *services.EmptyReq) (*services.ServiceResp, error) {
 	if s.launcher == nil {
-		return nil, ErrLauncherOffline
+		return nil, ErrCurrentlyOffline
+	}
+	if s.launcher.currState == LAUNCHER_STATE_LOADING {
+		return nil, ErrStillLoading
 	}
 	if err := s.launcher.Stop(ctx); err != nil {
 		return nil, err
 	}
+
+	s.launcher = nil
 
 	return &services.ServiceResp{
 		Status:  200,

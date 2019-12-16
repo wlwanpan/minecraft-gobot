@@ -40,8 +40,9 @@ func generateJavaRunCmd(ramAllocInGig int) *exec.Cmd {
 
 type launcher struct {
 	sync.Mutex
-	execCmd   *exec.Cmd     // Keep a ref to raw exec cmd in case.
-	currState launcherState // Keep track of the current launcher state.
+	execCmd    *exec.Cmd     // Keep a ref to raw exec cmd in case.
+	currState  launcherState // Keep track of the current launcher state.
+	lastestLog string        // TODO: need to buffer the logs instead of caching latest.
 
 	cmdin  chan string
 	cmdout chan string
@@ -129,6 +130,7 @@ func (l *launcher) processStdOut(ctx context.Context, stdout io.Reader) {
 		}
 
 		log.Println(line)
+		l.lastestLog = line
 		// Read stdout successful process output here.
 		if strings.Contains(line, "Done") {
 			l.transitionState(LAUNCHER_STATE_READY)
