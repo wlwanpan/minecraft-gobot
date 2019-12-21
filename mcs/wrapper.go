@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/wlwanpan/minecraft-gobot/config"
 )
 
 type wrapperState int
@@ -45,7 +47,8 @@ func generateJavaRunCmd(ramAllocInGig int) *exec.Cmd {
 	ramAllocInMb := strconv.Itoa(ramAllocInGig * MEM_CONVERSION)
 	initialMemAlloc := strings.Join([]string{"-Xmx", ramAllocInMb, "M"}, "")
 	maxMemAlloc := strings.Join([]string{"-Xms", ramAllocInMb, "M"}, "")
-	return exec.Command("java", initialMemAlloc, maxMemAlloc, "-jar", "server.jar", "nogui")
+	serverjar := config.Cfg.Mcs.Serverjar
+	return exec.Command("java", initialMemAlloc, maxMemAlloc, "-jar", serverjar, "nogui")
 }
 
 type console struct {

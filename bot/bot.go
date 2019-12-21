@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/wlwanpan/minecraft-gobot/config"
 	"github.com/wlwanpan/minecraft-gobot/services"
 	"google.golang.org/grpc"
 )
@@ -20,17 +21,18 @@ var (
 	ErrServerAlreadyRunning = errors.New("aws server already running")
 
 	ErrServerAlreadyStopped = errors.New("aws server already stopped")
-)
 
-const (
-	MCS_PROD_INSTANCE_ADDR string = "ec2-35-182-195-210.ca-central-1.compute.amazonaws.com:7777"
-	MCS_DEV_INSTANCE_ADDR  string = ":7777"
-	THE_BRAIN_CHANNEL_ID   string = "654873630806769674"
+	ErrMcsNotResponding = errors.New("mcs not responding")
 )
 
 type mcsClient struct {
 	grpcConn *grpc.ClientConn
 	client   services.LauncherServiceClient
+}
+
+func (c *mcsClient) Ping(ctx context.Context) error {
+	_, err := c.client.Ping(ctx, &services.PingReq{})
+	return err
 }
 
 func (c *mcsClient) Start(ctx context.Context, in *services.StartConfig) (*services.ServiceResp, error) {
@@ -45,17 +47,26 @@ func (c *mcsClient) Status(ctx context.Context) (*services.StatusResp, error) {
 	return c.client.Status(ctx, &services.EmptyReq{})
 }
 
-func (c *mcsClient) initConn() error {
-	addr := MCS_DEV_INSTANCE_ADDR
-	if os.Getenv("IS_DEV") == "0" {
-		addr = MCS_PROD_INSTANCE_ADDR
+func (c *mcsClient) checkConn(ctx context.Context) error {
+	if c.grpcConn != nil && c.client != nil {
+		return c.Ping(ctx)
 	}
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
-	if err != nil {
+	if err := c.initConn(); err != nil {
 		return err
+	}
+	return c.Ping(ctx)
+}
+
+func (c *mcsClient) initConn() error {
+	conn, err := grpc.Dial(config.Cfg.Bot.McsAddr, grpc.WithInsecure())
+	if err != nil {
+		log.Printf("error dialing mcs: %s", err)
+		return ErrMcsNotResponding
 	}
 	c.grpcConn = conn
 	c.client = services.NewLauncherServiceClient(conn)
+
+	log.Printf("successfully connected to mcs: %s", config.Cfg.Bot.McsAddr)
 	return nil
 }
 
@@ -68,6 +79,9 @@ func (c *mcsClient) closeConn() {
 		log.Printf("error closing conn: %s", err)
 		return
 	}
+
+	c.grpcConn = nil
+	c.client = nil
 }
 
 type Bot struct {
@@ -89,6 +103,7 @@ func New(token string) (*Bot, error) {
 
 	// Add discord ws message handlers.
 	b.sess.AddHandler(b.messageHandler)
+	go b.mcsClient.initConn()
 
 	return b, nil
 }
@@ -121,39 +136,41 @@ func (bot *Bot) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate)
 		// Ignore bot own messages.
 		return
 	}
-	if m.ChannelID != THE_BRAIN_CHANNEL_ID {
-		// Ignore any other channel other than 'the-brain'
+
+	if !isValidChannelID(m.ChannelID) {
+		// Ignore any other channel not whitelisted in the config file.
+		log.Printf("ignoring message=%s, from=%s", m.Content, m.ChannelID)
 		return
 	}
 
-	log.Printf("Recv cmd: %s", m.Content)
+	log.Printf("Receiving command=%s, from=%s", m.Content, s.State.User.Username)
+
+	// Probably need to be a cancellable context
+	ctx := context.Background()
 
 	// Pipe out incoming commands.
 	switch m.Content {
 	case "start":
-		bot.launchCmd(s, m)
+		bot.startCmd(ctx, s, m)
 	case "stop":
-		bot.closeCmd(s, m)
+		bot.closeCmd(ctx, s, m)
 	case "status":
-		bot.statusCmd(s, m)
+		bot.statusCmd(ctx, s, m)
 	default:
 		log.Printf("Missing handler for command: %s", m.Content)
 	}
 }
 
-func (bot *Bot) launchCmd(s *discordgo.Session, m *discordgo.MessageCreate) {
-	// TODO: need to build a connection manager to store/cache the active conns and
-	// with ttl and handle conn dropout/timeout scenarios.
-	if err := bot.mcsClient.initConn(); err != nil {
+func (bot *Bot) startCmd(ctx context.Context, s *discordgo.Session, m *discordgo.MessageCreate) {
+	if err := bot.mcsClient.checkConn(ctx); err != nil {
 		sendMessageToChannel(s, m.ChannelID, err.Error())
 		return
 	}
-	defer bot.mcsClient.closeConn()
 
 	config := &services.StartConfig{
 		MemAlloc: 3,
 	}
-	resp, err := bot.mcsClient.Start(context.Background(), config)
+	resp, err := bot.mcsClient.Start(ctx, config)
 	if err != nil {
 		errMessage := fmt.Sprintf("Error: %s", err)
 		sendMessageToChannel(s, m.ChannelID, errMessage)
@@ -171,7 +188,7 @@ func (bot *Bot) launchCmd(s *discordgo.Session, m *discordgo.MessageCreate) {
 		case <-done:
 			return
 		case <-ticker.C:
-			resp, err := bot.mcsClient.Status(context.Background())
+			resp, err := bot.mcsClient.Status(ctx)
 			if err != nil {
 				log.Println(err)
 				done <- true
@@ -187,14 +204,13 @@ func (bot *Bot) launchCmd(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-func (bot *Bot) closeCmd(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if err := bot.mcsClient.initConn(); err != nil {
+func (bot *Bot) closeCmd(ctx context.Context, s *discordgo.Session, m *discordgo.MessageCreate) {
+	if err := bot.mcsClient.checkConn(ctx); err != nil {
 		sendMessageToChannel(s, m.ChannelID, err.Error())
 		return
 	}
-	defer bot.mcsClient.closeConn()
 
-	resp, err := bot.mcsClient.Stop(context.Background())
+	resp, err := bot.mcsClient.Stop(ctx)
 	if err != nil {
 		sendMessageToChannel(s, m.ChannelID, err.Error())
 		return
@@ -203,28 +219,40 @@ func (bot *Bot) closeCmd(s *discordgo.Session, m *discordgo.MessageCreate) {
 	sendMessageToChannel(s, m.ChannelID, resp.GetMessage())
 }
 
-func (bot *Bot) statusCmd(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if err := bot.mcsClient.initConn(); err != nil {
-		sendMessageToChannel(s, m.ChannelID, err.Error())
+func (bot *Bot) statusCmd(ctx context.Context, s *discordgo.Session, m *discordgo.MessageCreate) {
+	if err := bot.mcsClient.checkConn(ctx); err != nil {
+		message := fmt.Sprintf("Error connecting to minecraft server: %s", err)
+		if err == ErrMcsNotResponding {
+			message = "Server status: offline"
+		}
+		sendMessageToChannel(s, m.ChannelID, message)
 		return
 	}
-	defer bot.mcsClient.closeConn()
 
-	status, err := bot.mcsClient.Status(context.Background())
+	status, err := bot.mcsClient.Status(ctx)
 	if err != nil {
 		sendMessageToChannel(s, m.ChannelID, err.Error())
 		return
 	}
 
-	log.Printf("launcher status: %s", status.GetServerState())
+	log.Printf("mcs status: %s", status.GetServerState())
 
-	message := fmt.Sprintf("Server status: %s\n%s", status.GetServerState(), status.GetMessage())
+	message := fmt.Sprintf("Server status: %s\n", status.GetServerState())
 	sendMessageToChannel(s, m.ChannelID, message)
 }
 
 func sendMessageToChannel(s *discordgo.Session, cid string, msg string) {
 	wrappedMsg := fmt.Sprintf("```%s```", msg)
 	s.ChannelMessageSend(cid, wrappedMsg)
+}
+
+func isValidChannelID(cid string) bool {
+	for _, chanID := range config.Cfg.Bot.WhitelistedChannelIDS {
+		if cid == chanID {
+			return true
+		}
+	}
+	return false
 }
 
 // TODO: probably need to store/cache the aws client session

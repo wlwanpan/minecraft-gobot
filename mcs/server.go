@@ -12,8 +12,6 @@ import (
 
 const (
 	DEFAULT_GRPC_TRANSPORT_PROTOCOL = "tcp"
-
-	DEFAULT_TCP_PORT = 7777
 )
 
 type server struct {
@@ -33,7 +31,14 @@ func (s *server) listen(p int) error {
 	return grpcServer.Serve(listener)
 }
 
+func (s *server) Ping(ctx context.Context, _ *services.PingReq) (*services.PongResp, error) {
+	log.Println("Request received: Ping")
+	return &services.PongResp{}, nil
+}
+
 func (s *server) Status(ctx context.Context, _ *services.EmptyReq) (*services.StatusResp, error) {
+	log.Println("Request received: Status")
+
 	var state wrapperState
 	if s.wpr == nil {
 		state = WRAPPER_STATE_OFFLINE
@@ -48,6 +53,7 @@ func (s *server) Status(ctx context.Context, _ *services.EmptyReq) (*services.St
 
 func (s *server) Start(ctx context.Context, config *services.StartConfig) (*services.ServiceResp, error) {
 	memAlloc := int(config.GetMemAlloc())
+	log.Printf("Request received: Start, mem-alloc=%d", memAlloc)
 
 	if s.wpr == nil {
 		s.wpr = newWrapper()
@@ -66,6 +72,8 @@ func (s *server) Start(ctx context.Context, config *services.StartConfig) (*serv
 }
 
 func (s *server) Stop(ctx context.Context, _ *services.EmptyReq) (*services.ServiceResp, error) {
+	log.Println("Request received: Stop")
+
 	if s.wpr == nil {
 		return &services.ServiceResp{
 			Message: "Server already offline",
@@ -88,9 +96,9 @@ func (s *server) Stop(ctx context.Context, _ *services.EmptyReq) (*services.Serv
 	}, nil
 }
 
-func Start() error {
+func Start(port int) error {
 	s := &server{}
 
-	log.Printf("Starting mcs on: %d", DEFAULT_TCP_PORT)
-	return s.listen(DEFAULT_TCP_PORT)
+	log.Printf("Starting mcs on: %d", port)
+	return s.listen(port)
 }

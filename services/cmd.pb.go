@@ -6,12 +6,11 @@ package services
 import (
 	context "context"
 	fmt "fmt"
-	math "math"
-
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	math "math"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -56,6 +55,68 @@ func (m *EmptyReq) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EmptyReq proto.InternalMessageInfo
 
+type PingReq struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PingReq) Reset()         { *m = PingReq{} }
+func (m *PingReq) String() string { return proto.CompactTextString(m) }
+func (*PingReq) ProtoMessage()    {}
+func (*PingReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7520252fb01eaf30, []int{1}
+}
+
+func (m *PingReq) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PingReq.Unmarshal(m, b)
+}
+func (m *PingReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PingReq.Marshal(b, m, deterministic)
+}
+func (m *PingReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PingReq.Merge(m, src)
+}
+func (m *PingReq) XXX_Size() int {
+	return xxx_messageInfo_PingReq.Size(m)
+}
+func (m *PingReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_PingReq.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PingReq proto.InternalMessageInfo
+
+type PongResp struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PongResp) Reset()         { *m = PongResp{} }
+func (m *PongResp) String() string { return proto.CompactTextString(m) }
+func (*PongResp) ProtoMessage()    {}
+func (*PongResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7520252fb01eaf30, []int{2}
+}
+
+func (m *PongResp) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PongResp.Unmarshal(m, b)
+}
+func (m *PongResp) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PongResp.Marshal(b, m, deterministic)
+}
+func (m *PongResp) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PongResp.Merge(m, src)
+}
+func (m *PongResp) XXX_Size() int {
+	return xxx_messageInfo_PongResp.Size(m)
+}
+func (m *PongResp) XXX_DiscardUnknown() {
+	xxx_messageInfo_PongResp.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PongResp proto.InternalMessageInfo
+
 type ServiceResp struct {
 	RequestId            int64    `protobuf:"varint,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
 	Status               int64    `protobuf:"varint,2,opt,name=status,proto3" json:"status,omitempty"`
@@ -69,7 +130,7 @@ func (m *ServiceResp) Reset()         { *m = ServiceResp{} }
 func (m *ServiceResp) String() string { return proto.CompactTextString(m) }
 func (*ServiceResp) ProtoMessage()    {}
 func (*ServiceResp) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7520252fb01eaf30, []int{1}
+	return fileDescriptor_7520252fb01eaf30, []int{3}
 }
 
 func (m *ServiceResp) XXX_Unmarshal(b []byte) error {
@@ -122,7 +183,7 @@ func (m *StartConfig) Reset()         { *m = StartConfig{} }
 func (m *StartConfig) String() string { return proto.CompactTextString(m) }
 func (*StartConfig) ProtoMessage()    {}
 func (*StartConfig) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7520252fb01eaf30, []int{2}
+	return fileDescriptor_7520252fb01eaf30, []int{4}
 }
 
 func (m *StartConfig) XXX_Unmarshal(b []byte) error {
@@ -162,7 +223,7 @@ func (m *StatusResp) Reset()         { *m = StatusResp{} }
 func (m *StatusResp) String() string { return proto.CompactTextString(m) }
 func (*StatusResp) ProtoMessage()    {}
 func (*StatusResp) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7520252fb01eaf30, []int{3}
+	return fileDescriptor_7520252fb01eaf30, []int{5}
 }
 
 func (m *StatusResp) XXX_Unmarshal(b []byte) error {
@@ -199,6 +260,8 @@ func (m *StatusResp) GetMessage() string {
 
 func init() {
 	proto.RegisterType((*EmptyReq)(nil), "services.EmptyReq")
+	proto.RegisterType((*PingReq)(nil), "services.PingReq")
+	proto.RegisterType((*PongResp)(nil), "services.PongResp")
 	proto.RegisterType((*ServiceResp)(nil), "services.ServiceResp")
 	proto.RegisterType((*StartConfig)(nil), "services.StartConfig")
 	proto.RegisterType((*StatusResp)(nil), "services.StatusResp")
@@ -207,24 +270,26 @@ func init() {
 func init() { proto.RegisterFile("cmd.proto", fileDescriptor_7520252fb01eaf30) }
 
 var fileDescriptor_7520252fb01eaf30 = []byte{
-	// 267 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x51, 0xcf, 0x4b, 0xc3, 0x30,
-	0x14, 0x5e, 0x37, 0xad, 0xed, 0xab, 0x20, 0x3c, 0x54, 0x8a, 0x22, 0xcc, 0x9c, 0x86, 0x87, 0x1e,
-	0x9c, 0xe0, 0x59, 0xc4, 0xc3, 0xc0, 0x53, 0x7a, 0xb7, 0xc4, 0xf6, 0x39, 0x0b, 0xcb, 0xd2, 0x25,
-	0xa9, 0xe0, 0x1f, 0xe6, 0xff, 0x27, 0x4d, 0x53, 0xd6, 0x81, 0x1e, 0xdf, 0x97, 0xef, 0xbd, 0xef,
-	0x47, 0x20, 0x2e, 0x65, 0x95, 0x35, 0x5a, 0x59, 0x85, 0x91, 0x21, 0xfd, 0x55, 0x97, 0x64, 0x18,
-	0x40, 0xf4, 0x22, 0x1b, 0xfb, 0xcd, 0x69, 0xc7, 0xde, 0x20, 0xc9, 0x7b, 0x9c, 0x93, 0x69, 0xf0,
-	0x06, 0x40, 0xd3, 0xae, 0x25, 0x63, 0x8b, 0xba, 0x4a, 0x83, 0x79, 0xb0, 0x98, 0xf1, 0xd8, 0x23,
-	0xab, 0x0a, 0x2f, 0x21, 0x34, 0x56, 0xd8, 0xd6, 0xa4, 0x53, 0xf7, 0xe4, 0x27, 0x4c, 0xe1, 0x44,
-	0x92, 0x31, 0x62, 0x4d, 0xe9, 0x6c, 0x1e, 0x2c, 0x62, 0x3e, 0x8c, 0xec, 0x0e, 0x92, 0xdc, 0x0a,
-	0x6d, 0x9f, 0xd5, 0xf6, 0xa3, 0x5e, 0xe3, 0x35, 0xc4, 0x92, 0x64, 0x21, 0x36, 0x1b, 0x55, 0xfa,
-	0xf3, 0x91, 0x24, 0xf9, 0xd4, 0xcd, 0x6c, 0x05, 0x90, 0xbb, 0x7b, 0xce, 0xca, 0x2d, 0x9c, 0x76,
-	0x8e, 0x49, 0x17, 0x9d, 0x08, 0x39, 0x76, 0xcc, 0x93, 0x1e, 0xeb, 0x78, 0x34, 0x96, 0x9d, 0x1e,
-	0xc8, 0xde, 0xff, 0x04, 0x70, 0xf6, 0x2a, 0xda, 0x6d, 0xf9, 0x49, 0xda, 0xe7, 0xc3, 0x47, 0x38,
-	0x76, 0x56, 0xf0, 0x22, 0x1b, 0xaa, 0xc8, 0x46, 0xde, 0xae, 0xc6, 0xf0, 0xbe, 0x12, 0x36, 0xc1,
-	0x25, 0x1c, 0xe5, 0x56, 0x35, 0x88, 0x7b, 0xc2, 0xd0, 0xdf, 0xff, 0x4b, 0x0f, 0x10, 0xf6, 0x61,
-	0xfe, 0x5c, 0x3b, 0x3f, 0xb0, 0xe0, 0x23, 0xb3, 0xc9, 0x7b, 0xe8, 0xfe, 0x6a, 0xf9, 0x1b, 0x00,
-	0x00, 0xff, 0xff, 0xf7, 0xc4, 0xc0, 0x55, 0xb8, 0x01, 0x00, 0x00,
+	// 299 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x51, 0x4f, 0x4b, 0xfb, 0x40,
+	0x10, 0x6d, 0xda, 0xfe, 0xda, 0xec, 0xf4, 0x07, 0xe2, 0xa0, 0x12, 0x2a, 0x42, 0xdd, 0x53, 0xf1,
+	0x50, 0xc1, 0x0a, 0x9e, 0x45, 0x3c, 0x14, 0x3c, 0x94, 0xe4, 0x6e, 0x89, 0xe9, 0x18, 0x03, 0xdd,
+	0x6c, 0xba, 0xbb, 0x11, 0xfc, 0xc2, 0x7e, 0x0e, 0xd9, 0xcd, 0x86, 0xa6, 0xa0, 0xb7, 0x79, 0x6f,
+	0xfe, 0xbe, 0x37, 0xc0, 0x32, 0xb1, 0x5d, 0x54, 0x4a, 0x1a, 0x89, 0xa1, 0x26, 0xf5, 0x59, 0x64,
+	0xa4, 0x39, 0x40, 0xf8, 0x2c, 0x2a, 0xf3, 0x15, 0xd3, 0x9e, 0x33, 0x18, 0xaf, 0x8b, 0x32, 0xb7,
+	0x21, 0x40, 0xb8, 0x96, 0x36, 0xd4, 0x15, 0x7f, 0x85, 0x49, 0xd2, 0x94, 0x5b, 0x88, 0x57, 0x00,
+	0x8a, 0xf6, 0x35, 0x69, 0xb3, 0x29, 0xb6, 0x51, 0x30, 0x0b, 0xe6, 0x83, 0x98, 0x79, 0x66, 0xb5,
+	0xc5, 0x0b, 0x18, 0x69, 0x93, 0x9a, 0x5a, 0x47, 0x7d, 0x97, 0xf2, 0x08, 0x23, 0x18, 0x0b, 0xd2,
+	0x3a, 0xcd, 0x29, 0x1a, 0xcc, 0x82, 0x39, 0x8b, 0x5b, 0xc8, 0x6f, 0x60, 0x92, 0x98, 0x54, 0x99,
+	0x27, 0x59, 0xbe, 0x17, 0x39, 0x5e, 0x02, 0x13, 0x24, 0x36, 0xe9, 0x6e, 0x27, 0x33, 0x3f, 0x3e,
+	0x14, 0x24, 0x1e, 0x2d, 0xe6, 0x2b, 0x80, 0xc4, 0xcd, 0x73, 0xa7, 0x5c, 0xc3, 0x7f, 0x2b, 0x84,
+	0xd4, 0xc6, 0x2e, 0x21, 0x57, 0xcd, 0xe2, 0x49, 0xc3, 0xd9, 0x3a, 0xea, 0xae, 0xed, 0x1f, 0xad,
+	0xbd, 0xfb, 0x0e, 0xe0, 0xe4, 0x25, 0xad, 0xcb, 0xec, 0x83, 0x94, 0xd7, 0x87, 0xb7, 0x30, 0xb4,
+	0x0e, 0xe0, 0xe9, 0xa2, 0x35, 0x68, 0xe1, 0x1d, 0x99, 0x62, 0x87, 0x6a, 0x9d, 0xe9, 0xe1, 0x03,
+	0xfc, 0x73, 0xb7, 0xe3, 0xf9, 0x21, 0xdd, 0x11, 0x33, 0xed, 0xd2, 0x07, 0x0f, 0x79, 0x0f, 0x97,
+	0x30, 0x4c, 0x8c, 0xac, 0xb0, 0x33, 0xb6, 0xfd, 0xc3, 0xdf, 0x4d, 0xf7, 0x30, 0x6a, 0xd4, 0xff,
+	0xda, 0x76, 0x76, 0x74, 0x82, 0xf7, 0x88, 0xf7, 0xde, 0x46, 0xee, 0xe7, 0xcb, 0x9f, 0x00, 0x00,
+	0x00, 0xff, 0xff, 0x90, 0x02, 0x33, 0xd2, 0x00, 0x02, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -239,6 +304,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type LauncherServiceClient interface {
+	Ping(ctx context.Context, in *PingReq, opts ...grpc.CallOption) (*PongResp, error)
 	Start(ctx context.Context, in *StartConfig, opts ...grpc.CallOption) (*ServiceResp, error)
 	Stop(ctx context.Context, in *EmptyReq, opts ...grpc.CallOption) (*ServiceResp, error)
 	Status(ctx context.Context, in *EmptyReq, opts ...grpc.CallOption) (*StatusResp, error)
@@ -250,6 +316,15 @@ type launcherServiceClient struct {
 
 func NewLauncherServiceClient(cc *grpc.ClientConn) LauncherServiceClient {
 	return &launcherServiceClient{cc}
+}
+
+func (c *launcherServiceClient) Ping(ctx context.Context, in *PingReq, opts ...grpc.CallOption) (*PongResp, error) {
+	out := new(PongResp)
+	err := c.cc.Invoke(ctx, "/services.LauncherService/Ping", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *launcherServiceClient) Start(ctx context.Context, in *StartConfig, opts ...grpc.CallOption) (*ServiceResp, error) {
@@ -281,6 +356,7 @@ func (c *launcherServiceClient) Status(ctx context.Context, in *EmptyReq, opts .
 
 // LauncherServiceServer is the server API for LauncherService service.
 type LauncherServiceServer interface {
+	Ping(context.Context, *PingReq) (*PongResp, error)
 	Start(context.Context, *StartConfig) (*ServiceResp, error)
 	Stop(context.Context, *EmptyReq) (*ServiceResp, error)
 	Status(context.Context, *EmptyReq) (*StatusResp, error)
@@ -290,6 +366,9 @@ type LauncherServiceServer interface {
 type UnimplementedLauncherServiceServer struct {
 }
 
+func (*UnimplementedLauncherServiceServer) Ping(ctx context.Context, req *PingReq) (*PongResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
+}
 func (*UnimplementedLauncherServiceServer) Start(ctx context.Context, req *StartConfig) (*ServiceResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Start not implemented")
 }
@@ -302,6 +381,24 @@ func (*UnimplementedLauncherServiceServer) Status(ctx context.Context, req *Empt
 
 func RegisterLauncherServiceServer(s *grpc.Server, srv LauncherServiceServer) {
 	s.RegisterService(&_LauncherService_serviceDesc, srv)
+}
+
+func _LauncherService_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PingReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LauncherServiceServer).Ping(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/services.LauncherService/Ping",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LauncherServiceServer).Ping(ctx, req.(*PingReq))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _LauncherService_Start_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -362,6 +459,10 @@ var _LauncherService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "services.LauncherService",
 	HandlerType: (*LauncherServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Ping",
+			Handler:    _LauncherService_Ping_Handler,
+		},
 		{
 			MethodName: "Start",
 			Handler:    _LauncherService_Start_Handler,

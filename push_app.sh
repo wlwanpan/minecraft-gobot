@@ -16,7 +16,7 @@ if [ "$1" == "bot" ]
 then 
   scp -i $MINECRAFT_CERT bin/minecraft-cli "ec2-user@${MINECRAFT_BOT_ADDR}:~"
   ECHO "Uploaded"
-elif [ "$1" == "launcher" ]
+elif [ "$1" == "mcs" ]
 then
   scp -i $MINECRAFT_CERT bin/minecraft-cli "ec2-user@${MINECRAFT_LAUNCHER_ADDR}:~"
   ECHO "Uploaded"

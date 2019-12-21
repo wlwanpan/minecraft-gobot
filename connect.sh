@@ -8,9 +8,9 @@ if [ $COMMAND == "bot" ]
 then
   ECHO "Connecting to minecraft bot instance"
   ssh -i certificates/minecraft-instance.pem "ec2-user@${MINECRAFT_BOT_ADDR}"
-elif [ $COMMAND == "launcher" ]
+elif [ $COMMAND == "mcs" ]
 then
-  ECHO "Connecting to minecraft launcher instance"
+  ECHO "Connecting to minecraft mcs instance"
   ssh -i certificates/minecraft-instance.pem "ec2-user@${MINECRAFT_LAUNCHER_ADDR}"
 else
   ECHO "Unknown app"

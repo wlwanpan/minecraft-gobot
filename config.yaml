@@ -1,0 +1,9 @@
+
+mcs:
+  port: 7777
+  server_jar: "server.jar"
+
+bot:
+  mcs_addr: ":7777" # ec2-35-182-195-210.ca-central-1.compute.amazonaws.com
+  whitelisted_channel_ids:
+    - "654873630806769674"
