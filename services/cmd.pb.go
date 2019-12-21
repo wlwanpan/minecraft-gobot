@@ -6,11 +6,12 @@ package services
 import (
 	context "context"
 	fmt "fmt"
+	math "math"
+
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	math "math"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -110,39 +111,39 @@ func (m *ServiceResp) GetMessage() string {
 	return ""
 }
 
-type LaunchConfig struct {
+type StartConfig struct {
 	MemAlloc             int64    `protobuf:"varint,1,opt,name=mem_alloc,json=memAlloc,proto3" json:"mem_alloc,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *LaunchConfig) Reset()         { *m = LaunchConfig{} }
-func (m *LaunchConfig) String() string { return proto.CompactTextString(m) }
-func (*LaunchConfig) ProtoMessage()    {}
-func (*LaunchConfig) Descriptor() ([]byte, []int) {
+func (m *StartConfig) Reset()         { *m = StartConfig{} }
+func (m *StartConfig) String() string { return proto.CompactTextString(m) }
+func (*StartConfig) ProtoMessage()    {}
+func (*StartConfig) Descriptor() ([]byte, []int) {
 	return fileDescriptor_7520252fb01eaf30, []int{2}
 }
 
-func (m *LaunchConfig) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_LaunchConfig.Unmarshal(m, b)
+func (m *StartConfig) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_StartConfig.Unmarshal(m, b)
 }
-func (m *LaunchConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_LaunchConfig.Marshal(b, m, deterministic)
+func (m *StartConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_StartConfig.Marshal(b, m, deterministic)
 }
-func (m *LaunchConfig) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LaunchConfig.Merge(m, src)
+func (m *StartConfig) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StartConfig.Merge(m, src)
 }
-func (m *LaunchConfig) XXX_Size() int {
-	return xxx_messageInfo_LaunchConfig.Size(m)
+func (m *StartConfig) XXX_Size() int {
+	return xxx_messageInfo_StartConfig.Size(m)
 }
-func (m *LaunchConfig) XXX_DiscardUnknown() {
-	xxx_messageInfo_LaunchConfig.DiscardUnknown(m)
+func (m *StartConfig) XXX_DiscardUnknown() {
+	xxx_messageInfo_StartConfig.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_LaunchConfig proto.InternalMessageInfo
+var xxx_messageInfo_StartConfig proto.InternalMessageInfo
 
-func (m *LaunchConfig) GetMemAlloc() int64 {
+func (m *StartConfig) GetMemAlloc() int64 {
 	if m != nil {
 		return m.MemAlloc
 	}
@@ -199,7 +200,7 @@ func (m *StatusResp) GetMessage() string {
 func init() {
 	proto.RegisterType((*EmptyReq)(nil), "services.EmptyReq")
 	proto.RegisterType((*ServiceResp)(nil), "services.ServiceResp")
-	proto.RegisterType((*LaunchConfig)(nil), "services.LaunchConfig")
+	proto.RegisterType((*StartConfig)(nil), "services.StartConfig")
 	proto.RegisterType((*StatusResp)(nil), "services.StatusResp")
 }
 
@@ -208,22 +209,22 @@ func init() { proto.RegisterFile("cmd.proto", fileDescriptor_7520252fb01eaf30) }
 var fileDescriptor_7520252fb01eaf30 = []byte{
 	// 267 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x51, 0xcf, 0x4b, 0xc3, 0x30,
-	0x14, 0x5e, 0x37, 0xa9, 0xcd, 0xdb, 0x40, 0x78, 0xe8, 0x28, 0x8a, 0x30, 0x73, 0x1a, 0x08, 0x3d,
-	0x38, 0x2f, 0x1e, 0x45, 0x3c, 0x0c, 0x3c, 0xa5, 0x77, 0x4b, 0x6d, 0x9f, 0xb3, 0xb0, 0x2c, 0x5d,
-	0x92, 0x0a, 0xfe, 0x65, 0xfe, 0x7b, 0xd2, 0xa4, 0x75, 0x15, 0xdc, 0xf1, 0x7d, 0x79, 0xdf, 0xfb,
-	0x7e, 0x04, 0x58, 0x21, 0xcb, 0xa4, 0xd6, 0xca, 0x2a, 0x8c, 0x0c, 0xe9, 0xcf, 0xaa, 0x20, 0xc3,
-	0x01, 0xa2, 0x67, 0x59, 0xdb, 0x2f, 0x41, 0x7b, 0xfe, 0x0a, 0xd3, 0xd4, 0xe3, 0x82, 0x4c, 0x8d,
-	0xd7, 0x00, 0x9a, 0xf6, 0x0d, 0x19, 0x9b, 0x55, 0x65, 0x1c, 0x2c, 0x82, 0xe5, 0x44, 0xb0, 0x0e,
-	0x59, 0x97, 0x38, 0x87, 0xd0, 0xd8, 0xdc, 0x36, 0x26, 0x1e, 0xbb, 0xa7, 0x6e, 0xc2, 0x18, 0x4e,
-	0x25, 0x19, 0x93, 0x6f, 0x28, 0x9e, 0x2c, 0x82, 0x25, 0x13, 0xfd, 0xc8, 0x6f, 0x61, 0xf6, 0x92,
-	0x37, 0xbb, 0xe2, 0xe3, 0x49, 0xed, 0xde, 0xab, 0x0d, 0x5e, 0x01, 0x93, 0x24, 0xb3, 0x7c, 0xbb,
-	0x55, 0x45, 0x77, 0x3f, 0x92, 0x24, 0x1f, 0xdb, 0x99, 0xaf, 0x01, 0x52, 0x77, 0xd0, 0x79, 0xb9,
-	0x81, 0x59, 0x6b, 0x99, 0x74, 0xd6, 0xaa, 0x90, 0xdb, 0x66, 0x62, 0xea, 0xb1, 0x76, 0x8f, 0x86,
-	0xba, 0xe3, 0x3f, 0xba, 0x77, 0xdf, 0x01, 0x9c, 0x79, 0x61, 0xd2, 0x5d, 0x40, 0x7c, 0x80, 0xd0,
-	0x43, 0x38, 0x4f, 0xfa, 0x32, 0x92, 0xa1, 0xbb, 0xcb, 0x8b, 0x03, 0x3e, 0x68, 0x85, 0x8f, 0x70,
-	0x05, 0x27, 0xa9, 0x55, 0x35, 0xe2, 0x61, 0xa1, 0xaf, 0xf0, 0x38, 0xe9, 0x1e, 0x42, 0x1f, 0xe7,
-	0x5f, 0xda, 0xf9, 0x80, 0xf6, 0x1b, 0x9a, 0x8f, 0xde, 0x42, 0xf7, 0x5d, 0xab, 0x9f, 0x00, 0x00,
-	0x00, 0xff, 0xff, 0x33, 0x69, 0xb8, 0x6b, 0xbb, 0x01, 0x00, 0x00,
+	0x14, 0x5e, 0x37, 0xad, 0xed, 0xab, 0x20, 0x3c, 0x54, 0x8a, 0x22, 0xcc, 0x9c, 0x86, 0x87, 0x1e,
+	0x9c, 0xe0, 0x59, 0xc4, 0xc3, 0xc0, 0x53, 0x7a, 0xb7, 0xc4, 0xf6, 0x39, 0x0b, 0xcb, 0xd2, 0x25,
+	0xa9, 0xe0, 0x1f, 0xe6, 0xff, 0x27, 0x4d, 0x53, 0xd6, 0x81, 0x1e, 0xdf, 0x97, 0xef, 0xbd, 0xef,
+	0x47, 0x20, 0x2e, 0x65, 0x95, 0x35, 0x5a, 0x59, 0x85, 0x91, 0x21, 0xfd, 0x55, 0x97, 0x64, 0x18,
+	0x40, 0xf4, 0x22, 0x1b, 0xfb, 0xcd, 0x69, 0xc7, 0xde, 0x20, 0xc9, 0x7b, 0x9c, 0x93, 0x69, 0xf0,
+	0x06, 0x40, 0xd3, 0xae, 0x25, 0x63, 0x8b, 0xba, 0x4a, 0x83, 0x79, 0xb0, 0x98, 0xf1, 0xd8, 0x23,
+	0xab, 0x0a, 0x2f, 0x21, 0x34, 0x56, 0xd8, 0xd6, 0xa4, 0x53, 0xf7, 0xe4, 0x27, 0x4c, 0xe1, 0x44,
+	0x92, 0x31, 0x62, 0x4d, 0xe9, 0x6c, 0x1e, 0x2c, 0x62, 0x3e, 0x8c, 0xec, 0x0e, 0x92, 0xdc, 0x0a,
+	0x6d, 0x9f, 0xd5, 0xf6, 0xa3, 0x5e, 0xe3, 0x35, 0xc4, 0x92, 0x64, 0x21, 0x36, 0x1b, 0x55, 0xfa,
+	0xf3, 0x91, 0x24, 0xf9, 0xd4, 0xcd, 0x6c, 0x05, 0x90, 0xbb, 0x7b, 0xce, 0xca, 0x2d, 0x9c, 0x76,
+	0x8e, 0x49, 0x17, 0x9d, 0x08, 0x39, 0x76, 0xcc, 0x93, 0x1e, 0xeb, 0x78, 0x34, 0x96, 0x9d, 0x1e,
+	0xc8, 0xde, 0xff, 0x04, 0x70, 0xf6, 0x2a, 0xda, 0x6d, 0xf9, 0x49, 0xda, 0xe7, 0xc3, 0x47, 0x38,
+	0x76, 0x56, 0xf0, 0x22, 0x1b, 0xaa, 0xc8, 0x46, 0xde, 0xae, 0xc6, 0xf0, 0xbe, 0x12, 0x36, 0xc1,
+	0x25, 0x1c, 0xe5, 0x56, 0x35, 0x88, 0x7b, 0xc2, 0xd0, 0xdf, 0xff, 0x4b, 0x0f, 0x10, 0xf6, 0x61,
+	0xfe, 0x5c, 0x3b, 0x3f, 0xb0, 0xe0, 0x23, 0xb3, 0xc9, 0x7b, 0xe8, 0xfe, 0x6a, 0xf9, 0x1b, 0x00,
+	0x00, 0xff, 0xff, 0xf7, 0xc4, 0xc0, 0x55, 0xb8, 0x01, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -238,7 +239,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type LauncherServiceClient interface {
-	Launch(ctx context.Context, in *LaunchConfig, opts ...grpc.CallOption) (*ServiceResp, error)
+	Start(ctx context.Context, in *StartConfig, opts ...grpc.CallOption) (*ServiceResp, error)
 	Stop(ctx context.Context, in *EmptyReq, opts ...grpc.CallOption) (*ServiceResp, error)
 	Status(ctx context.Context, in *EmptyReq, opts ...grpc.CallOption) (*StatusResp, error)
 }
@@ -251,9 +252,9 @@ func NewLauncherServiceClient(cc *grpc.ClientConn) LauncherServiceClient {
 	return &launcherServiceClient{cc}
 }
 
-func (c *launcherServiceClient) Launch(ctx context.Context, in *LaunchConfig, opts ...grpc.CallOption) (*ServiceResp, error) {
+func (c *launcherServiceClient) Start(ctx context.Context, in *StartConfig, opts ...grpc.CallOption) (*ServiceResp, error) {
 	out := new(ServiceResp)
-	err := c.cc.Invoke(ctx, "/services.LauncherService/Launch", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/services.LauncherService/Start", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -280,7 +281,7 @@ func (c *launcherServiceClient) Status(ctx context.Context, in *EmptyReq, opts .
 
 // LauncherServiceServer is the server API for LauncherService service.
 type LauncherServiceServer interface {
-	Launch(context.Context, *LaunchConfig) (*ServiceResp, error)
+	Start(context.Context, *StartConfig) (*ServiceResp, error)
 	Stop(context.Context, *EmptyReq) (*ServiceResp, error)
 	Status(context.Context, *EmptyReq) (*StatusResp, error)
 }
@@ -289,8 +290,8 @@ type LauncherServiceServer interface {
 type UnimplementedLauncherServiceServer struct {
 }
 
-func (*UnimplementedLauncherServiceServer) Launch(ctx context.Context, req *LaunchConfig) (*ServiceResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Launch not implemented")
+func (*UnimplementedLauncherServiceServer) Start(ctx context.Context, req *StartConfig) (*ServiceResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Start not implemented")
 }
 func (*UnimplementedLauncherServiceServer) Stop(ctx context.Context, req *EmptyReq) (*ServiceResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Stop not implemented")
@@ -303,20 +304,20 @@ func RegisterLauncherServiceServer(s *grpc.Server, srv LauncherServiceServer) {
 	s.RegisterService(&_LauncherService_serviceDesc, srv)
 }
 
-func _LauncherService_Launch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LaunchConfig)
+func _LauncherService_Start_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StartConfig)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(LauncherServiceServer).Launch(ctx, in)
+		return srv.(LauncherServiceServer).Start(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/services.LauncherService/Launch",
+		FullMethod: "/services.LauncherService/Start",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LauncherServiceServer).Launch(ctx, req.(*LaunchConfig))
+		return srv.(LauncherServiceServer).Start(ctx, req.(*StartConfig))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -362,8 +363,8 @@ var _LauncherService_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*LauncherServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Launch",
-			Handler:    _LauncherService_Launch_Handler,
+			MethodName: "Start",
+			Handler:    _LauncherService_Start_Handler,
 		},
 		{
 			MethodName: "Stop",

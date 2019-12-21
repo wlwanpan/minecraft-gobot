@@ -9,7 +9,7 @@ message ServiceResp {
   string message = 3;
 }
 
-message LaunchConfig {
+message StartConfig {
   int64 mem_alloc = 1;
 }
 
@@ -19,7 +19,7 @@ message StatusResp {
 }
 
 service LauncherService {
-  rpc Launch(LaunchConfig) returns (ServiceResp) {}
+  rpc Start(StartConfig) returns (ServiceResp) {}
   rpc Stop(EmptyReq) returns (ServiceResp) {}
   rpc Status(EmptyReq) returns (StatusResp) {}
 }
