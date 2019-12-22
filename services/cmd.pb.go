@@ -270,26 +270,26 @@ func init() {
 func init() { proto.RegisterFile("cmd.proto", fileDescriptor_7520252fb01eaf30) }
 
 var fileDescriptor_7520252fb01eaf30 = []byte{
-	// 299 bytes of a gzipped FileDescriptorProto
+	// 293 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x51, 0x4f, 0x4b, 0xfb, 0x40,
-	0x10, 0x6d, 0xda, 0xfe, 0xda, 0xec, 0xf4, 0x07, 0xe2, 0xa0, 0x12, 0x2a, 0x42, 0xdd, 0x53, 0xf1,
-	0x50, 0xc1, 0x0a, 0x9e, 0x45, 0x3c, 0x14, 0x3c, 0x94, 0xe4, 0x6e, 0x89, 0xe9, 0x18, 0x03, 0xdd,
-	0x6c, 0xba, 0xbb, 0x11, 0xfc, 0xc2, 0x7e, 0x0e, 0xd9, 0xcd, 0x86, 0xa6, 0xa0, 0xb7, 0x79, 0x6f,
-	0xfe, 0xbe, 0x37, 0xc0, 0x32, 0xb1, 0x5d, 0x54, 0x4a, 0x1a, 0x89, 0xa1, 0x26, 0xf5, 0x59, 0x64,
-	0xa4, 0x39, 0x40, 0xf8, 0x2c, 0x2a, 0xf3, 0x15, 0xd3, 0x9e, 0x33, 0x18, 0xaf, 0x8b, 0x32, 0xb7,
-	0x21, 0x40, 0xb8, 0x96, 0x36, 0xd4, 0x15, 0x7f, 0x85, 0x49, 0xd2, 0x94, 0x5b, 0x88, 0x57, 0x00,
-	0x8a, 0xf6, 0x35, 0x69, 0xb3, 0x29, 0xb6, 0x51, 0x30, 0x0b, 0xe6, 0x83, 0x98, 0x79, 0x66, 0xb5,
-	0xc5, 0x0b, 0x18, 0x69, 0x93, 0x9a, 0x5a, 0x47, 0x7d, 0x97, 0xf2, 0x08, 0x23, 0x18, 0x0b, 0xd2,
-	0x3a, 0xcd, 0x29, 0x1a, 0xcc, 0x82, 0x39, 0x8b, 0x5b, 0xc8, 0x6f, 0x60, 0x92, 0x98, 0x54, 0x99,
-	0x27, 0x59, 0xbe, 0x17, 0x39, 0x5e, 0x02, 0x13, 0x24, 0x36, 0xe9, 0x6e, 0x27, 0x33, 0x3f, 0x3e,
-	0x14, 0x24, 0x1e, 0x2d, 0xe6, 0x2b, 0x80, 0xc4, 0xcd, 0x73, 0xa7, 0x5c, 0xc3, 0x7f, 0x2b, 0x84,
-	0xd4, 0xc6, 0x2e, 0x21, 0x57, 0xcd, 0xe2, 0x49, 0xc3, 0xd9, 0x3a, 0xea, 0xae, 0xed, 0x1f, 0xad,
-	0xbd, 0xfb, 0x0e, 0xe0, 0xe4, 0x25, 0xad, 0xcb, 0xec, 0x83, 0x94, 0xd7, 0x87, 0xb7, 0x30, 0xb4,
-	0x0e, 0xe0, 0xe9, 0xa2, 0x35, 0x68, 0xe1, 0x1d, 0x99, 0x62, 0x87, 0x6a, 0x9d, 0xe9, 0xe1, 0x03,
-	0xfc, 0x73, 0xb7, 0xe3, 0xf9, 0x21, 0xdd, 0x11, 0x33, 0xed, 0xd2, 0x07, 0x0f, 0x79, 0x0f, 0x97,
-	0x30, 0x4c, 0x8c, 0xac, 0xb0, 0x33, 0xb6, 0xfd, 0xc3, 0xdf, 0x4d, 0xf7, 0x30, 0x6a, 0xd4, 0xff,
-	0xda, 0x76, 0x76, 0x74, 0x82, 0xf7, 0x88, 0xf7, 0xde, 0x46, 0xee, 0xe7, 0xcb, 0x9f, 0x00, 0x00,
-	0x00, 0xff, 0xff, 0x90, 0x02, 0x33, 0xd2, 0x00, 0x02, 0x00, 0x00,
+	0x10, 0x6d, 0xda, 0xfe, 0xd2, 0xec, 0xe4, 0x77, 0x71, 0x50, 0x09, 0x15, 0xa1, 0xee, 0xa9, 0x78,
+	0x88, 0x60, 0x05, 0xcf, 0x22, 0x1e, 0x7a, 0x10, 0x4a, 0x72, 0x37, 0xc4, 0x64, 0x0c, 0x81, 0x6e,
+	0x37, 0xcd, 0x6e, 0x05, 0x3f, 0xae, 0xdf, 0x44, 0x76, 0xb3, 0xa1, 0x29, 0xe8, 0x6d, 0xde, 0x9b,
+	0xbf, 0xef, 0x0d, 0xb0, 0x42, 0x94, 0x71, 0xd3, 0x4a, 0x2d, 0x31, 0x50, 0xd4, 0x7e, 0xd6, 0x05,
+	0x29, 0x0e, 0x10, 0xbc, 0x88, 0x46, 0x7f, 0x25, 0xb4, 0xe7, 0x0c, 0x66, 0x9b, 0x7a, 0x57, 0x99,
+	0x10, 0x20, 0xd8, 0x48, 0x13, 0xaa, 0x86, 0xbf, 0x41, 0x98, 0x76, 0xe5, 0x06, 0xe2, 0x35, 0x40,
+	0x4b, 0xfb, 0x03, 0x29, 0x9d, 0xd5, 0x65, 0xe4, 0x2d, 0xbc, 0xe5, 0x24, 0x61, 0x8e, 0x59, 0x97,
+	0x78, 0x09, 0xbe, 0xd2, 0xb9, 0x3e, 0xa8, 0x68, 0x6c, 0x53, 0x0e, 0x61, 0x04, 0x33, 0x41, 0x4a,
+	0xe5, 0x15, 0x45, 0x93, 0x85, 0xb7, 0x64, 0x49, 0x0f, 0xf9, 0x2d, 0x84, 0xa9, 0xce, 0x5b, 0xfd,
+	0x2c, 0x77, 0x1f, 0x75, 0x85, 0x57, 0xc0, 0x04, 0x89, 0x2c, 0xdf, 0x6e, 0x65, 0xe1, 0xc6, 0x07,
+	0x82, 0xc4, 0x93, 0xc1, 0x7c, 0x0d, 0x90, 0xda, 0x79, 0xf6, 0x94, 0x1b, 0xf8, 0x6f, 0x84, 0x50,
+	0x9b, 0x99, 0x25, 0x64, 0xab, 0x59, 0x12, 0x76, 0x9c, 0xa9, 0xa3, 0xe1, 0xda, 0xf1, 0xc9, 0xda,
+	0xfb, 0x6f, 0x0f, 0xe0, 0xb5, 0x50, 0x4e, 0x1a, 0xde, 0xc1, 0xd4, 0x88, 0xc7, 0xb3, 0xb8, 0xf7,
+	0x26, 0x76, 0x66, 0xcc, 0x71, 0x40, 0xf5, 0xa6, 0x8c, 0xf0, 0x11, 0xfe, 0xd9, 0xb3, 0xf1, 0xe2,
+	0x98, 0x1e, 0xe8, 0x98, 0x0f, 0xe9, 0xa3, 0x7d, 0x7c, 0x84, 0x2b, 0x98, 0xa6, 0x5a, 0x36, 0x38,
+	0x18, 0xdb, 0xbf, 0xe0, 0xef, 0xa6, 0x07, 0xf0, 0x3b, 0xe1, 0xbf, 0xb6, 0x9d, 0x9f, 0x9c, 0xe0,
+	0xec, 0xe1, 0xa3, 0x77, 0xdf, 0xbe, 0x7b, 0xf5, 0x13, 0x00, 0x00, 0xff, 0xff, 0x02, 0x2d, 0x75,
+	0x79, 0xfb, 0x01, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -300,180 +300,180 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// LauncherServiceClient is the client API for LauncherService service.
+// McsServiceClient is the client API for McsService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type LauncherServiceClient interface {
+type McsServiceClient interface {
 	Ping(ctx context.Context, in *PingReq, opts ...grpc.CallOption) (*PongResp, error)
 	Start(ctx context.Context, in *StartConfig, opts ...grpc.CallOption) (*ServiceResp, error)
 	Stop(ctx context.Context, in *EmptyReq, opts ...grpc.CallOption) (*ServiceResp, error)
 	Status(ctx context.Context, in *EmptyReq, opts ...grpc.CallOption) (*StatusResp, error)
 }
 
-type launcherServiceClient struct {
+type mcsServiceClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewLauncherServiceClient(cc *grpc.ClientConn) LauncherServiceClient {
-	return &launcherServiceClient{cc}
+func NewMcsServiceClient(cc *grpc.ClientConn) McsServiceClient {
+	return &mcsServiceClient{cc}
 }
 
-func (c *launcherServiceClient) Ping(ctx context.Context, in *PingReq, opts ...grpc.CallOption) (*PongResp, error) {
+func (c *mcsServiceClient) Ping(ctx context.Context, in *PingReq, opts ...grpc.CallOption) (*PongResp, error) {
 	out := new(PongResp)
-	err := c.cc.Invoke(ctx, "/services.LauncherService/Ping", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/services.McsService/Ping", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *launcherServiceClient) Start(ctx context.Context, in *StartConfig, opts ...grpc.CallOption) (*ServiceResp, error) {
+func (c *mcsServiceClient) Start(ctx context.Context, in *StartConfig, opts ...grpc.CallOption) (*ServiceResp, error) {
 	out := new(ServiceResp)
-	err := c.cc.Invoke(ctx, "/services.LauncherService/Start", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/services.McsService/Start", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *launcherServiceClient) Stop(ctx context.Context, in *EmptyReq, opts ...grpc.CallOption) (*ServiceResp, error) {
+func (c *mcsServiceClient) Stop(ctx context.Context, in *EmptyReq, opts ...grpc.CallOption) (*ServiceResp, error) {
 	out := new(ServiceResp)
-	err := c.cc.Invoke(ctx, "/services.LauncherService/Stop", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/services.McsService/Stop", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *launcherServiceClient) Status(ctx context.Context, in *EmptyReq, opts ...grpc.CallOption) (*StatusResp, error) {
+func (c *mcsServiceClient) Status(ctx context.Context, in *EmptyReq, opts ...grpc.CallOption) (*StatusResp, error) {
 	out := new(StatusResp)
-	err := c.cc.Invoke(ctx, "/services.LauncherService/Status", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/services.McsService/Status", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// LauncherServiceServer is the server API for LauncherService service.
-type LauncherServiceServer interface {
+// McsServiceServer is the server API for McsService service.
+type McsServiceServer interface {
 	Ping(context.Context, *PingReq) (*PongResp, error)
 	Start(context.Context, *StartConfig) (*ServiceResp, error)
 	Stop(context.Context, *EmptyReq) (*ServiceResp, error)
 	Status(context.Context, *EmptyReq) (*StatusResp, error)
 }
 
-// UnimplementedLauncherServiceServer can be embedded to have forward compatible implementations.
-type UnimplementedLauncherServiceServer struct {
+// UnimplementedMcsServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedMcsServiceServer struct {
 }
 
-func (*UnimplementedLauncherServiceServer) Ping(ctx context.Context, req *PingReq) (*PongResp, error) {
+func (*UnimplementedMcsServiceServer) Ping(ctx context.Context, req *PingReq) (*PongResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
 }
-func (*UnimplementedLauncherServiceServer) Start(ctx context.Context, req *StartConfig) (*ServiceResp, error) {
+func (*UnimplementedMcsServiceServer) Start(ctx context.Context, req *StartConfig) (*ServiceResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Start not implemented")
 }
-func (*UnimplementedLauncherServiceServer) Stop(ctx context.Context, req *EmptyReq) (*ServiceResp, error) {
+func (*UnimplementedMcsServiceServer) Stop(ctx context.Context, req *EmptyReq) (*ServiceResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Stop not implemented")
 }
-func (*UnimplementedLauncherServiceServer) Status(ctx context.Context, req *EmptyReq) (*StatusResp, error) {
+func (*UnimplementedMcsServiceServer) Status(ctx context.Context, req *EmptyReq) (*StatusResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Status not implemented")
 }
 
-func RegisterLauncherServiceServer(s *grpc.Server, srv LauncherServiceServer) {
-	s.RegisterService(&_LauncherService_serviceDesc, srv)
+func RegisterMcsServiceServer(s *grpc.Server, srv McsServiceServer) {
+	s.RegisterService(&_McsService_serviceDesc, srv)
 }
 
-func _LauncherService_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _McsService_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PingReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(LauncherServiceServer).Ping(ctx, in)
+		return srv.(McsServiceServer).Ping(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/services.LauncherService/Ping",
+		FullMethod: "/services.McsService/Ping",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LauncherServiceServer).Ping(ctx, req.(*PingReq))
+		return srv.(McsServiceServer).Ping(ctx, req.(*PingReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _LauncherService_Start_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _McsService_Start_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(StartConfig)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(LauncherServiceServer).Start(ctx, in)
+		return srv.(McsServiceServer).Start(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/services.LauncherService/Start",
+		FullMethod: "/services.McsService/Start",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LauncherServiceServer).Start(ctx, req.(*StartConfig))
+		return srv.(McsServiceServer).Start(ctx, req.(*StartConfig))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _LauncherService_Stop_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _McsService_Stop_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(EmptyReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(LauncherServiceServer).Stop(ctx, in)
+		return srv.(McsServiceServer).Stop(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/services.LauncherService/Stop",
+		FullMethod: "/services.McsService/Stop",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LauncherServiceServer).Stop(ctx, req.(*EmptyReq))
+		return srv.(McsServiceServer).Stop(ctx, req.(*EmptyReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _LauncherService_Status_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _McsService_Status_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(EmptyReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(LauncherServiceServer).Status(ctx, in)
+		return srv.(McsServiceServer).Status(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/services.LauncherService/Status",
+		FullMethod: "/services.McsService/Status",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LauncherServiceServer).Status(ctx, req.(*EmptyReq))
+		return srv.(McsServiceServer).Status(ctx, req.(*EmptyReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-var _LauncherService_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "services.LauncherService",
-	HandlerType: (*LauncherServiceServer)(nil),
+var _McsService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "services.McsService",
+	HandlerType: (*McsServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "Ping",
-			Handler:    _LauncherService_Ping_Handler,
+			Handler:    _McsService_Ping_Handler,
 		},
 		{
 			MethodName: "Start",
-			Handler:    _LauncherService_Start_Handler,
+			Handler:    _McsService_Start_Handler,
 		},
 		{
 			MethodName: "Stop",
-			Handler:    _LauncherService_Stop_Handler,
+			Handler:    _McsService_Stop_Handler,
 		},
 		{
 			MethodName: "Status",
-			Handler:    _LauncherService_Status_Handler,
+			Handler:    _McsService_Status_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

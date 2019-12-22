@@ -22,7 +22,7 @@ message StatusResp {
   string message = 2;
 }
 
-service LauncherService {
+service McsService {
   rpc Ping(PingReq) returns (PongResp) {}
   rpc Start(StartConfig) returns (ServiceResp) {}
   rpc Stop(EmptyReq) returns (ServiceResp) {}

@@ -18,7 +18,7 @@ then
   ECHO "Uploaded"
 elif [ "$1" == "mcs" ]
 then
-  scp -i $MINECRAFT_CERT bin/minecraft-cli "ec2-user@${MINECRAFT_LAUNCHER_ADDR}:~"
+  scp -i $MINECRAFT_CERT bin/minecraft-cli "ec2-user@${MINECRAFT_MCS_ADDR}:~"
   ECHO "Uploaded"
 else
   ECHO "Unknown app"

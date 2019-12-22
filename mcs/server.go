@@ -26,7 +26,7 @@ func (s *server) listen(p int) error {
 	}
 
 	grpcServer := grpc.NewServer()
-	services.RegisterLauncherServiceServer(grpcServer, s)
+	services.RegisterMcsServiceServer(grpcServer, s)
 
 	return grpcServer.Serve(listener)
 }

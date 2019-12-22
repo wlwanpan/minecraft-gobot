@@ -27,7 +27,7 @@ var (
 
 type mcsClient struct {
 	grpcConn *grpc.ClientConn
-	client   services.LauncherServiceClient
+	client   services.McsServiceClient
 }
 
 func (c *mcsClient) Ping(ctx context.Context) error {
@@ -64,7 +64,7 @@ func (c *mcsClient) initConn() error {
 		return ErrMcsNotResponding
 	}
 	c.grpcConn = conn
-	c.client = services.NewLauncherServiceClient(conn)
+	c.client = services.NewMcsServiceClient(conn)
 
 	log.Printf("successfully connected to mcs: %s", config.Cfg.Bot.McsAddr)
 	return nil
@@ -168,7 +168,7 @@ func (bot *Bot) startCmd(ctx context.Context, s *discordgo.Session, m *discordgo
 	}
 
 	config := &services.StartConfig{
-		MemAlloc: 3,
+		MemAlloc: 4,
 	}
 	resp, err := bot.mcsClient.Start(ctx, config)
 	if err != nil {
@@ -177,7 +177,6 @@ func (bot *Bot) startCmd(ctx context.Context, s *discordgo.Session, m *discordgo
 		return
 	}
 
-	// Send init message: 'Launching server!'
 	sendMessageToChannel(s, m.ChannelID, resp.GetMessage())
 
 	ticker := time.NewTicker(5 * time.Second)
@@ -199,8 +198,7 @@ func (bot *Bot) startCmd(ctx context.Context, s *discordgo.Session, m *discordgo
 				sendMessageToChannel(s, m.ChannelID, "Server up and running!")
 				done <- true
 			case "loading":
-				message := fmt.Sprintf("Still loading:\n%s", resp.GetMessage())
-				sendMessageToChannel(s, m.ChannelID, message)
+				sendMessageToChannel(s, m.ChannelID, resp.GetMessage())
 			default:
 				message := fmt.Sprintf("Error, server state: %s", resp.GetServerState())
 				sendMessageToChannel(s, m.ChannelID, message)

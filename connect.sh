@@ -11,7 +11,7 @@ then
 elif [ $COMMAND == "mcs" ]
 then
   ECHO "Connecting to minecraft mcs instance"
-  ssh -i certificates/minecraft-instance.pem "ec2-user@${MINECRAFT_LAUNCHER_ADDR}"
+  ssh -i certificates/minecraft-instance.pem "ec2-user@${MINECRAFT_MCS_ADDR}"
 else
   ECHO "Unknown app"
 fi
