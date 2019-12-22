@@ -145,6 +145,7 @@ func (w *wrapper) start(mem int) error {
 	}
 
 	w.nextState(WRAPPER_STATE_LOADING)
+	w.sessMetadata = &sessionMetadata{}
 
 	go w.processCmdOut()
 
@@ -156,7 +157,7 @@ func (w *wrapper) stop() error {
 		return ErrServerAlreadyOffline
 	}
 
-	w.pushCmd("/exit")
+	w.pushCmd("/stop\n") // Seems like stdin is not working ???
 	<-time.After(3 * time.Second)
 
 	if err := w.console.kill(); err != nil {
@@ -217,7 +218,9 @@ func (w *wrapper) processCmdOut() {
 		// TODO: Move the "Done" cond here to log_update
 		if strings.Contains(line, "Done") {
 			w.nextState(WRAPPER_STATE_ONLINE)
-			w.sessMetadata = &sessionMetadata{}
+			if w.sessMetadata == nil {
+				w.sessMetadata = &sessionMetadata{}
+			}
 			continue
 		}
 
