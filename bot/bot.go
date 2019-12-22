@@ -157,7 +157,7 @@ func (bot *Bot) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate)
 	case "status":
 		bot.statusCmd(ctx, s, m)
 	default:
-		log.Printf("Missing handler for command: %s", m.Content)
+		log.Printf("Unknown command=%s", m.Content)
 	}
 }
 
@@ -194,11 +194,17 @@ func (bot *Bot) startCmd(ctx context.Context, s *discordgo.Session, m *discordgo
 				done <- true
 			}
 
-			if resp.GetMessage() == "RUNNING" {
+			switch resp.GetServerState() {
+			case "online":
 				sendMessageToChannel(s, m.ChannelID, "Server up and running!")
 				done <- true
-			} else {
-				sendMessageToChannel(s, m.ChannelID, "loading...")
+			case "loading":
+				message := fmt.Sprintf("Still loading:\n%s", resp.GetMessage())
+				sendMessageToChannel(s, m.ChannelID, message)
+			default:
+				message := fmt.Sprintf("Error, server state: %s", resp.GetServerState())
+				sendMessageToChannel(s, m.ChannelID, message)
+				done <- true
 			}
 		}
 	}

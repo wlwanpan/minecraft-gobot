@@ -48,6 +48,7 @@ func (s *server) Status(ctx context.Context, _ *services.EmptyReq) (*services.St
 
 	return &services.StatusResp{
 		ServerState: wrapperStateMap[state],
+		Message:     s.wpr.lastLine,
 	}, nil
 }
 

@@ -59,18 +59,20 @@ type console struct {
 
 func (c *console) execJava(mem int) error {
 	c.execCmd = generateJavaRunCmd(mem)
+
 	stdout, err := c.execCmd.StdoutPipe()
 	if err != nil {
 		return err
 	}
+	c.cmdout = bufio.NewReader(stdout)
+
 	stdin, err := c.execCmd.StdinPipe()
 	if err != nil {
 		return err
 	}
-
-	c.cmdout = bufio.NewReader(stdout)
 	c.cmdin = bufio.NewWriter(stdin)
-	return nil
+
+	return c.execCmd.Run()
 }
 
 func (c *console) kill() error {
@@ -79,8 +81,9 @@ func (c *console) kill() error {
 
 type wrapper struct {
 	sync.Mutex
-	state   wrapperState
-	console *console
+	state    wrapperState
+	console  *console
+	lastLine string
 }
 
 func newWrapper() *wrapper {
@@ -145,6 +148,9 @@ func (w *wrapper) processCmdOut() {
 			}
 			log.Println(err)
 		}
+
+		log.Println(line)
+		w.lastLine = line
 
 		// Read stdout successful process output here.
 		if strings.Contains(line, "Done") {
