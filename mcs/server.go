@@ -40,15 +40,17 @@ func (s *server) Status(ctx context.Context, _ *services.EmptyReq) (*services.St
 	log.Println("Request received: Status")
 
 	var state wrapperState
+	var message string
 	if s.wpr == nil {
 		state = WRAPPER_STATE_OFFLINE
 	} else {
 		state = s.wpr.state
+		message = s.wpr.lastLine
 	}
 
 	return &services.StatusResp{
 		ServerState: wrapperStateMap[state],
-		Message:     s.wpr.lastLine,
+		Message:     message,
 	}, nil
 }
 

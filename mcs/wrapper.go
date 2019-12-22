@@ -72,7 +72,7 @@ func (c *console) execJava(mem int) error {
 	}
 	c.cmdin = bufio.NewWriter(stdin)
 
-	return c.execCmd.Run()
+	return c.execCmd.Start()
 }
 
 func (c *console) kill() error {
