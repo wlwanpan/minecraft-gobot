@@ -2,14 +2,15 @@ package mcs
 
 import (
 	"bufio"
-	"context"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"os/exec"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/wlwanpan/minecraft-gobot/config"
 )
@@ -79,11 +80,31 @@ func (c *console) kill() error {
 	return c.execCmd.Process.Kill()
 }
 
+type sessionMetadata struct {
+	connectedPlayers []string
+}
+
+func (meta *sessionMetadata) addConnectedPlayer(p string) {
+	meta.connectedPlayers = append(meta.connectedPlayers, p)
+}
+
+func (meta *sessionMetadata) removeConnectedPlayer(p string) {
+	n := []string{}
+	for _, player := range meta.connectedPlayers {
+		if player != p {
+			n = append(n, player)
+		}
+	}
+	meta.connectedPlayers = n
+}
+
 type wrapper struct {
-	sync.Mutex
-	state    wrapperState
-	console  *console
-	lastLine string
+	sync.RWMutex
+	state   wrapperState
+	console *console
+
+	lastLogLine  string
+	sessMetadata *sessionMetadata
 }
 
 func newWrapper() *wrapper {
@@ -94,14 +115,20 @@ func newWrapper() *wrapper {
 }
 
 func (w *wrapper) isLoading() bool {
+	w.RLock()
+	defer w.RUnlock()
 	return w.state == WRAPPER_STATE_LOADING
 }
 
 func (w *wrapper) isOnline() bool {
+	w.RLock()
+	defer w.RUnlock()
 	return w.state == WRAPPER_STATE_ONLINE
 }
 
 func (w *wrapper) isOffline() bool {
+	w.RLock()
+	defer w.RUnlock()
 	return w.state == WRAPPER_STATE_OFFLINE
 }
 
@@ -129,13 +156,49 @@ func (w *wrapper) stop() error {
 		return ErrServerAlreadyOffline
 	}
 
+	w.pushCmd("/exit")
+	<-time.After(3 * time.Second)
+
 	if err := w.console.kill(); err != nil {
 		return err
 	}
 
 	w.nextState(WRAPPER_STATE_OFFLINE)
+	w.sessMetadata = nil
 
 	return nil
+}
+
+func (w *wrapper) processUpdateSess(log string) {
+	if w.isOffline() {
+		return
+	}
+
+	update := parseToLogUpdate(log)
+	if update == nil {
+		return
+	}
+	switch update.action {
+	case PLAYER_JOINED:
+		w.sessMetadata.addConnectedPlayer(update.target)
+		return
+	case PLAYER_LEFT:
+		w.sessMetadata.removeConnectedPlayer(update.target)
+		return
+	default:
+		w.lastLogLine = update.message
+	}
+}
+
+func (w *wrapper) sessionSummary() string {
+	if w.isOffline() {
+		return ""
+	}
+	if len(w.sessMetadata.connectedPlayers) == 0 {
+		return w.lastLogLine
+	}
+
+	return fmt.Sprintf("Players online: %s", strings.Join(w.sessMetadata.connectedPlayers, ", "))
 }
 
 func (w *wrapper) processCmdOut() {
@@ -150,17 +213,19 @@ func (w *wrapper) processCmdOut() {
 		}
 
 		log.Println(line)
-		w.lastLine = line
 
-		// Read stdout successful process output here.
+		// TODO: Move the "Done" cond here to log_update
 		if strings.Contains(line, "Done") {
 			w.nextState(WRAPPER_STATE_ONLINE)
+			w.sessMetadata = &sessionMetadata{}
 			continue
 		}
+
+		w.processUpdateSess(line)
 	}
 }
 
-func (w *wrapper) pushCmd(ctx context.Context, cmd string) error {
+func (w *wrapper) pushCmd(cmd string) error {
 	n, err := w.console.cmdin.WriteString(cmd)
 	if err != nil {
 		return err

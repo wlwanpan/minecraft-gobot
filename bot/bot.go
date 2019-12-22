@@ -23,6 +23,8 @@ var (
 	ErrServerAlreadyStopped = errors.New("aws server already stopped")
 
 	ErrMcsNotResponding = errors.New("mcs not responding")
+
+	ErrPingAttemptFailed = errors.New("mcs ping attemp failed")
 )
 
 type mcsClient struct {
@@ -70,18 +72,16 @@ func (c *mcsClient) initConn() error {
 	return nil
 }
 
-func (c *mcsClient) closeConn() {
-	if c.grpcConn == nil {
-		log.Println("error closing conn: grpc conn must be open")
-		return
-	}
-	if err := c.grpcConn.Close(); err != nil {
-		log.Printf("error closing conn: %s", err)
-		return
+func (c *mcsClient) closeConn() error {
+	if c.grpcConn != nil {
+		if err := c.grpcConn.Close(); err != nil {
+			return err
+		}
 	}
 
 	c.grpcConn = nil
 	c.client = nil
+	return nil
 }
 
 type Bot struct {
@@ -168,7 +168,7 @@ func (bot *Bot) startCmd(ctx context.Context, s *discordgo.Session, m *discordgo
 	}
 
 	config := &services.StartConfig{
-		MemAlloc: 4,
+		MemAlloc: 3,
 	}
 	resp, err := bot.mcsClient.Start(ctx, config)
 	if err != nil {

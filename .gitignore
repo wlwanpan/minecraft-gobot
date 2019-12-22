@@ -23,5 +23,7 @@
 *.code-workspace
 
 # App specific dev files.
+.DS_Store
+.vscode
 bin
 certificates

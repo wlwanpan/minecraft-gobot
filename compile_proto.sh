@@ -1,2 +1,2 @@
 #!/bin/bash
-protoc -I services/ -I${GOPATH}/src --go_out=plugins=grpc:services/ services/cmd.proto
+protoc -I services/ -I${GOPATH}/src --go_out=plugins=grpc:services/ services/*.proto
