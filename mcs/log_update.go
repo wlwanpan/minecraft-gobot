@@ -9,16 +9,18 @@ const (
 	PLAYER_JOINED string = "joined"
 	PLAYER_LEFT   string = "left"
 
+	SERVER_QUERY_TIME      string = "time is"
 	SERVER_PREPARING_SPAWN string = "Preparing spawn"
 	SERVER_PREPARING_LEVEL string = "Preparing level"
 )
 
 var actionables = map[string]*regexp.Regexp{
-	PLAYER_JOINED: regexp.MustCompile(`]: (?s)(.*) joined the game`),
-	PLAYER_LEFT:   regexp.MustCompile(`]: (?s)(.*) left the game`),
+	PLAYER_JOINED:     regexp.MustCompile(`]: (?s)(.*) joined the game`),
+	PLAYER_LEFT:       regexp.MustCompile(`]: (?s)(.*) left the game`),
+	SERVER_QUERY_TIME: regexp.MustCompile(`]: The time is (?s)(.*)\n`),
 }
 
-var defaultActionables = regexp.MustCompile(`/INFO]: (?s)(.*)`)
+var defaultActionables = regexp.MustCompile(`/INFO]: (?s)(.*)\n`)
 
 type logUpdate struct {
 	action  string

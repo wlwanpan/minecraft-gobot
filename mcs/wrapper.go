@@ -21,13 +21,19 @@ const (
 	NEWLINE_BYTE byte = '\n'
 
 	MEM_CONVERSION int = 1024
-
 	// mcs initialized but no operation was performed yet, sleeping state.
 	WRAPPER_STATE_OFFLINE wrapperState = iota
 	// Minecraft server.jar successfully loaded and stdout 'DONE' is caught.
 	WRAPPER_STATE_ONLINE
 	// Minecraft serve.jar is still loading, has not yet caught 'Help' stdout.
 	WRAPPER_STATE_LOADING
+)
+
+const (
+	// Game event specific const
+	MARKET_OPEN_GAMETICK int64 = 4000
+
+	MARKET_CLOSE_GAMETICK int64 = 12000
 )
 
 var (
@@ -76,12 +82,24 @@ func (c *console) execJava(mem int) error {
 	return c.execCmd.Start()
 }
 
+func (c *console) write(cmd string) error {
+	wrappedCmd := fmt.Sprintf("%s\r\n", cmd)
+	_, err := c.cmdin.WriteString(wrappedCmd)
+	if err != nil {
+		return err
+	}
+	return c.cmdin.Flush()
+}
+
 func (c *console) kill() error {
 	return c.execCmd.Process.Kill()
 }
 
 type sessionMetadata struct {
 	connectedPlayers []string
+
+	// TODO: move to new game session state.
+	isMarketOpen bool
 }
 
 func (meta *sessionMetadata) addConnectedPlayer(p string) {
@@ -102,6 +120,7 @@ type wrapper struct {
 	sync.RWMutex
 	state   wrapperState
 	console *console
+	done    chan bool
 
 	lastLogLine  string
 	sessMetadata *sessionMetadata
@@ -132,6 +151,20 @@ func (w *wrapper) isOffline() bool {
 	return w.state == WRAPPER_STATE_OFFLINE
 }
 
+func (w *wrapper) startScheduler() {
+	ticker := time.NewTicker(10 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			// Check game tick related events.
+			w.pushCmd("time query daytime")
+		case <-w.done:
+			return
+		}
+	}
+}
+
 func (w *wrapper) start(mem int) error {
 	if w.isLoading() {
 		return ErrServerAlreadyLoading
@@ -148,6 +181,7 @@ func (w *wrapper) start(mem int) error {
 	w.sessMetadata = &sessionMetadata{}
 
 	go w.processCmdOut()
+	go w.startScheduler()
 
 	return nil
 }
@@ -157,28 +191,32 @@ func (w *wrapper) stop() error {
 		return ErrServerAlreadyOffline
 	}
 
-	w.pushCmd("/stop\n") // Seems like stdin is not working ???
-	<-time.After(3 * time.Second)
+	w.pushCmd("stop")
 
+	// Guarentee that the process is killed after 5s delay.
+	<-time.After(3 * time.Second)
 	if err := w.console.kill(); err != nil {
 		return err
 	}
 
-	w.nextState(WRAPPER_STATE_OFFLINE)
 	w.sessMetadata = nil
+	w.nextState(WRAPPER_STATE_OFFLINE)
+	w.done <- true
 
 	return nil
 }
 
-func (w *wrapper) processUpdateSess(log string) {
+func (w *wrapper) processUpdateSess(l string) {
 	if w.isOffline() {
 		return
 	}
 
-	update := parseToLogUpdate(log)
+	update := parseToLogUpdate(l)
 	if update == nil {
 		return
 	}
+	log.Printf("Update detected: action='%s', target='%s', message='%s'", update.action, update.target, update.message)
+
 	switch update.action {
 	case PLAYER_JOINED:
 		w.sessMetadata.addConnectedPlayer(update.target)
@@ -186,6 +224,21 @@ func (w *wrapper) processUpdateSess(log string) {
 	case PLAYER_LEFT:
 		w.sessMetadata.removeConnectedPlayer(update.target)
 		return
+	case SERVER_QUERY_TIME:
+		gametick, _ := strconv.ParseInt(update.target, 10, 64)
+		if gametick >= MARKET_OPEN_GAMETICK && gametick <= MARKET_CLOSE_GAMETICK {
+			if !w.sessMetadata.isMarketOpen {
+				c := fmt.Sprintf("say %s", "Market is now open!")
+				w.pushCmd(c)
+				w.sessMetadata.isMarketOpen = true
+			}
+		} else {
+			if w.sessMetadata.isMarketOpen {
+				c := fmt.Sprintf("say %s", "Market is now closed!")
+				w.pushCmd(c)
+				w.sessMetadata.isMarketOpen = false
+			}
+		}
 	default:
 		w.lastLogLine = update.message
 	}
@@ -213,7 +266,7 @@ func (w *wrapper) processCmdOut() {
 			log.Println(err)
 		}
 
-		log.Println(line)
+		log.Printf("Raw log line: %s\n", line)
 
 		// TODO: Move the "Done" cond here to log_update
 		if strings.Contains(line, "Done") {
@@ -229,17 +282,8 @@ func (w *wrapper) processCmdOut() {
 }
 
 func (w *wrapper) pushCmd(cmd string) error {
-	n, err := w.console.cmdin.WriteString(cmd)
-	if err != nil {
-		return err
-	}
-	if n != len(cmd) {
-		log.Println("Error pushing command to stdin")
-		return nil
-	}
-
-	log.Println("Successfully pushed.")
-	return nil
+	log.Printf("pushing command=%s", cmd)
+	return w.console.write(cmd)
 }
 
 func (w *wrapper) nextState(s wrapperState) {

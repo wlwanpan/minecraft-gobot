@@ -179,7 +179,7 @@ func (bot *Bot) startCmd(ctx context.Context, s *discordgo.Session, m *discordgo
 
 	sendMessageToChannel(s, m.ChannelID, resp.GetMessage())
 
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(3 * time.Second)
 	done := make(chan bool)
 
 	for {
@@ -257,58 +257,4 @@ func isValidChannelID(cid string) bool {
 		}
 	}
 	return false
-}
-
-// TODO: probably need to store/cache the aws client session
-// instead of re initializing a session per op.
-func getInstanceStatus() (*awsEC2StatusResp, error) {
-	client, err := NewAwsClient()
-	if err != nil {
-		return nil, err
-	}
-	status, err := client.InstanceStatus()
-	if err != nil {
-		return nil, err
-	}
-	return status, nil
-}
-
-func startInstance() error {
-	client, err := NewAwsClient()
-	if err != nil {
-		return err
-	}
-	status, err := client.InstanceStatus()
-	if err != nil {
-		if err == ErrNoRunningInstances {
-			// All good start it.
-		} else {
-			return err
-		}
-	}
-	if status.StateCode == INSTANCE_RUNNING_CODE {
-		return ErrServerAlreadyRunning
-	}
-	if status.StateCode != INSTANCE_STOPPED_CODE {
-		log.Printf("Can only start instance when its in a 'STOPPED' state: %s", status.State)
-		return ErrServerAlreadyRunning
-	}
-
-	return client.StartInstance()
-}
-
-func stopInstance() error {
-	client, err := NewAwsClient()
-	if err != nil {
-		return err
-	}
-	status, err := client.InstanceStatus()
-	if err != nil {
-		return err
-	}
-	if status.StateCode != INSTANCE_RUNNING_CODE {
-		return ErrServerAlreadyStopped
-	}
-
-	return client.StopInstance()
 }
