@@ -287,7 +287,7 @@ func (w *wrapper) pushCmd(cmd string) error {
 }
 
 func (w *wrapper) nextState(s wrapperState) {
-	w.Lock() // Should probably be a read/write lock instead
+	w.Lock()
 	defer w.Unlock()
 
 	from := wrapperStateMap[w.state]
