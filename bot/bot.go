@@ -15,6 +15,13 @@ import (
 	"github.com/wlwanpan/minecraft-gobot/services"
 )
 
+const (
+	// Direcly maps mcs.WRAPPER_STATE_*
+	SERVER_STATUS_OFFLINE string = "offline"
+	SERVER_STATUS_ONLINE  string = "online"
+	SERVER_STATUS_LOADING string = "loading"
+)
+
 type Bot struct {
 	sync.Mutex
 	sess      *discordgo.Session
@@ -87,6 +94,8 @@ func (bot *Bot) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate)
 		bot.closeCmd(ctx, s, m)
 	case "status":
 		bot.statusCmd(ctx, s, m)
+	case "backup":
+		bot.backupCmd(ctx, s, m)
 	default:
 		log.Printf("Unknown command=%s", m.Content)
 	}
@@ -111,29 +120,28 @@ func (bot *Bot) startCmd(ctx context.Context, s *discordgo.Session, m *discordgo
 	sendMessageToChannel(s, m.ChannelID, resp.GetMessage())
 
 	ticker := time.NewTicker(3 * time.Second)
-	done := make(chan bool)
 
 	for {
 		select {
-		case <-done:
+		case <-ctx.Done():
 			return
 		case <-ticker.C:
 			resp, err := bot.mcsClient.Status(ctx)
 			if err != nil {
 				log.Println(err)
-				done <- true
+				return
 			}
 
 			switch resp.GetServerState() {
-			case "online":
+			case SERVER_STATUS_ONLINE:
 				sendMessageToChannel(s, m.ChannelID, "Server up and running!")
-				done <- true
-			case "loading":
+				return
+			case SERVER_STATUS_LOADING:
 				sendMessageToChannel(s, m.ChannelID, resp.GetMessage())
 			default:
-				message := fmt.Sprintf("Error, server state: %s", resp.GetServerState())
+				message := fmt.Sprintf("Error! server state: %s", resp.GetServerState())
 				sendMessageToChannel(s, m.ChannelID, message)
-				done <- true
+				return
 			}
 		}
 	}
@@ -174,6 +182,26 @@ func (bot *Bot) statusCmd(ctx context.Context, s *discordgo.Session, m *discordg
 
 	message := fmt.Sprintf("Server status: %s\n", status.GetServerState())
 	sendMessageToChannel(s, m.ChannelID, message)
+}
+
+func (bot *Bot) backupCmd(ctx context.Context, s *discordgo.Session, m *discordgo.MessageCreate) {
+	if err := bot.mcsClient.checkConn(ctx); err != nil {
+		sendMessageToChannel(s, m.ChannelID, err.Error())
+		return
+	}
+
+	status, err := bot.mcsClient.Status(ctx)
+	if err != nil {
+		sendMessageToChannel(s, m.ChannelID, err.Error())
+		return
+	}
+
+	if status.GetServerState() != SERVER_STATUS_OFFLINE {
+		sendMessageToChannel(s, m.ChannelID, "Server must be offline to perform a backup.")
+		return
+	}
+
+	// TODO: Start backup process call...
 }
 
 func sendMessageToChannel(s *discordgo.Session, cid string, msg string) {

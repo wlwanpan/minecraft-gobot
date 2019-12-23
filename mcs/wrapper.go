@@ -29,13 +29,6 @@ const (
 	WRAPPER_STATE_LOADING
 )
 
-const (
-	// Game event specific const
-	MARKET_OPEN_GAMETICK int64 = 4000
-
-	MARKET_CLOSE_GAMETICK int64 = 12000
-)
-
 var (
 	ErrServerAlreadyLoading = errors.New("server is already loading")
 
@@ -91,6 +84,10 @@ func (c *console) write(cmd string) error {
 	return c.cmdin.Flush()
 }
 
+func (c *console) readLine() (string, error) {
+	return c.cmdout.ReadString(NEWLINE_BYTE)
+}
+
 func (c *console) kill() error {
 	return c.execCmd.Process.Kill()
 }
@@ -122,14 +119,15 @@ type wrapper struct {
 	console *console
 	done    chan bool
 
-	lastLogLine  string
-	sessMetadata *sessionMetadata
+	gameSess    *gameSession
+	lastLogLine string
 }
 
 func newWrapper() *wrapper {
 	return &wrapper{
 		state:   WRAPPER_STATE_OFFLINE,
 		console: &console{},
+		done:    make(chan bool),
 	}
 }
 
@@ -151,18 +149,24 @@ func (w *wrapper) isOffline() bool {
 	return w.state == WRAPPER_STATE_OFFLINE
 }
 
-func (w *wrapper) startScheduler() {
-	ticker := time.NewTicker(10 * time.Second)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ticker.C:
-			// Check game tick related events.
-			w.pushCmd("time query daytime")
-		case <-w.done:
-			return
-		}
+func (w *wrapper) startGameSession() {
+	if w.gameSess != nil {
+		w.gameSess.stop()
 	}
+
+	log.Println("Starting new game session")
+	w.gameSess = newGameSession(w.console)
+	go w.gameSess.start()
+}
+
+func (w *wrapper) stopGameSession() {
+	if w.gameSess == nil {
+		return
+	}
+
+	log.Printf("Stopping current game session, game-tick=%d", w.gameSess.gametick)
+	w.gameSess.stop()
+	w.gameSess = nil
 }
 
 func (w *wrapper) start(mem int) error {
@@ -178,10 +182,8 @@ func (w *wrapper) start(mem int) error {
 	}
 
 	w.nextState(WRAPPER_STATE_LOADING)
-	w.sessMetadata = &sessionMetadata{}
 
-	go w.processCmdOut()
-	go w.startScheduler()
+	go w.processCmdOut() // exits on EOF
 
 	return nil
 }
@@ -194,90 +196,59 @@ func (w *wrapper) stop() error {
 	w.pushCmd("stop")
 
 	// Guarentee that the process is killed after 5s delay.
-	<-time.After(3 * time.Second)
+	<-time.After(5 * time.Second)
 	if err := w.console.kill(); err != nil {
 		return err
 	}
 
-	w.sessMetadata = nil
 	w.nextState(WRAPPER_STATE_OFFLINE)
+	w.stopGameSession()
 	w.done <- true
 
 	return nil
 }
 
-func (w *wrapper) processUpdateSess(l string) {
+func (w *wrapper) processLogLine(line string) {
 	if w.isOffline() {
 		return
 	}
 
-	update := parseToLogUpdate(l)
-	if update == nil {
+	update, err := parseToLogUpdate(line)
+	if err != nil {
+		log.Printf("err parsing log: %s", err)
 		return
 	}
+
 	log.Printf("Update detected: action='%s', target='%s', message='%s'", update.action, update.target, update.message)
+	w.lastLogLine = update.message
 
-	switch update.action {
-	case PLAYER_JOINED:
-		w.sessMetadata.addConnectedPlayer(update.target)
-		return
-	case PLAYER_LEFT:
-		w.sessMetadata.removeConnectedPlayer(update.target)
-		return
-	case SERVER_QUERY_TIME:
-		gametick, _ := strconv.ParseInt(update.target, 10, 64)
-		if gametick >= MARKET_OPEN_GAMETICK && gametick <= MARKET_CLOSE_GAMETICK {
-			if !w.sessMetadata.isMarketOpen {
-				c := fmt.Sprintf("say %s", "Market is now open!")
-				w.pushCmd(c)
-				w.sessMetadata.isMarketOpen = true
-			}
-		} else {
-			if w.sessMetadata.isMarketOpen {
-				c := fmt.Sprintf("say %s", "Market is now closed!")
-				w.pushCmd(c)
-				w.sessMetadata.isMarketOpen = false
-			}
-		}
-	default:
-		w.lastLogLine = update.message
+	if w.gameSess != nil {
+		w.gameSess.updates <- update
 	}
-}
-
-func (w *wrapper) sessionSummary() string {
-	if w.isOffline() {
-		return ""
-	}
-	if len(w.sessMetadata.connectedPlayers) == 0 {
-		return w.lastLogLine
-	}
-
-	return fmt.Sprintf("Players online: %s", strings.Join(w.sessMetadata.connectedPlayers, ", "))
 }
 
 func (w *wrapper) processCmdOut() {
 	for {
-		line, err := w.console.cmdout.ReadString(NEWLINE_BYTE)
+		line, err := w.console.readLine()
 		if err != nil {
 			if err == io.EOF {
-				log.Printf("EOF reached: %s", line)
-				break
+				log.Printf("EOF reached! exiting log='%s'", line)
+				return
 			}
 			log.Println(err)
+			return
 		}
 
-		log.Printf("Raw log line: %s\n", line)
+		log.Printf("Raw log='%s'", line)
 
 		// TODO: Move the "Done" cond here to log_update
 		if strings.Contains(line, "Done") {
 			w.nextState(WRAPPER_STATE_ONLINE)
-			if w.sessMetadata == nil {
-				w.sessMetadata = &sessionMetadata{}
-			}
+			w.startGameSession()
 			continue
 		}
 
-		w.processUpdateSess(line)
+		w.processLogLine(line)
 	}
 }
 

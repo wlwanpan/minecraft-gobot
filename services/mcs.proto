@@ -22,9 +22,15 @@ message StatusResp {
   string message = 2;
 }
 
+message BackupResp {
+  string status = 1;
+  string link_url = 2;
+}
+
 service McsService {
   rpc Ping(PingReq) returns (PongResp) {}
   rpc Start(StartConfig) returns (ServiceResp) {}
   rpc Stop(EmptyReq) returns (ServiceResp) {}
   rpc Status(EmptyReq) returns (StatusResp) {}
+  rpc Backup(EmptyReq) returns (BackupResp) {}
 }

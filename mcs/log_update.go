@@ -1,6 +1,7 @@
 package mcs
 
 import (
+	"errors"
 	"regexp"
 	"strings"
 )
@@ -12,6 +13,10 @@ const (
 	SERVER_QUERY_TIME      string = "time is"
 	SERVER_PREPARING_SPAWN string = "Preparing spawn"
 	SERVER_PREPARING_LEVEL string = "Preparing level"
+)
+
+var (
+	ErrNoActionableLogUpdate = errors.New("no actionables in the log line")
 )
 
 var actionables = map[string]*regexp.Regexp{
@@ -28,23 +33,23 @@ type logUpdate struct {
 	message string
 }
 
-func parseToLogUpdate(l string) *logUpdate {
+func parseToLogUpdate(l string) (logUpdate, error) {
 	for action, reg := range actionables {
 		if !strings.Contains(l, action) {
 			continue
 		}
-		return &logUpdate{
+		return logUpdate{
 			action: action,
 			target: reg.FindStringSubmatch(l)[1],
-		}
+		}, nil
 	}
 
 	r := defaultActionables.FindStringSubmatch(l)
 	if len(r) < 2 {
-		return nil
+		return logUpdate{}, ErrNoActionableLogUpdate
 	}
 
-	return &logUpdate{
+	return logUpdate{
 		message: r[1],
-	}
+	}, nil
 }

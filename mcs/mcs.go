@@ -45,7 +45,7 @@ func (s *server) Status(ctx context.Context, _ *services.EmptyReq) (*services.St
 		state = WRAPPER_STATE_OFFLINE
 	} else {
 		state = s.wpr.state
-		message = s.wpr.sessionSummary()
+		message = s.wpr.lastLogLine
 	}
 
 	return &services.StatusResp{
