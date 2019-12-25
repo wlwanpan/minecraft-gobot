@@ -10,9 +10,9 @@ import (
 const (
 	GAME_TICKER_SYNC_INTERVAL time.Duration = 30 * time.Second
 
-	MARKET_OPEN_GAMETICK int64 = 4000
+	MARKET_OPEN_GAMETICK int64 = 2000
 
-	MARKET_CLOSE_GAMETICK int64 = 12000
+	MARKET_CLOSE_GAMETICK int64 = 9000
 
 	TIME_QUERY_CMD string = "time query daytime"
 )
