@@ -1,10 +1,15 @@
 package mcs
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
 	"time"
+)
+
+var (
+	ErrSavingGameTimedOut = errors.New("saving game timed out")
 )
 
 const (
@@ -14,13 +19,17 @@ const (
 
 	MARKET_CLOSE_GAMETICK int64 = 9000
 
+	// Minecraft server commands
 	TIME_QUERY_CMD string = "time query daytime"
+
+	SAVE_GAME_CMD string = "save-all flush"
 )
 
 type gameSession struct {
 	console   *console
 	terminate chan bool
 	updates   chan logUpdate
+	saves     chan bool
 	gametick  int64
 
 	isMarketOpen bool
@@ -31,6 +40,7 @@ func newGameSession(c *console) *gameSession {
 		console:      c,
 		terminate:    make(chan bool),
 		updates:      make(chan logUpdate),
+		saves:        make(chan bool),
 		gametick:     0,
 		isMarketOpen: false,
 	}
@@ -77,6 +87,16 @@ func (s *gameSession) start() {
 	stop <- true
 }
 
+func (s *gameSession) save() error {
+	s.console.write(SAVE_GAME_CMD)
+	select {
+	case <-s.saves:
+		return nil
+	case <-time.After(5 * time.Second):
+		return ErrSavingGameTimedOut
+	}
+}
+
 func (s *gameSession) checkGameTickEvents() {
 	if s.gametick >= MARKET_OPEN_GAMETICK && s.gametick <= MARKET_CLOSE_GAMETICK {
 		if !s.isMarketOpen {
@@ -103,6 +123,8 @@ func (s *gameSession) processUpdates(stop chan bool) {
 				log.Printf("Syncing game ticks, current-tick=%d, real-tick=%d", s.gametick, realGametick)
 
 				s.gametick = realGametick
+			case SERVER_SAVED_THE_GAME:
+				s.saves <- true
 			}
 		case <-stop:
 			return

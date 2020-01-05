@@ -13,6 +13,7 @@ const (
 	SERVER_QUERY_TIME      string = "time is"
 	SERVER_PREPARING_SPAWN string = "Preparing spawn"
 	SERVER_PREPARING_LEVEL string = "Preparing level"
+	SERVER_SAVED_THE_GAME  string = "Saved the game"
 )
 
 var (
@@ -25,6 +26,11 @@ var actionables = map[string]*regexp.Regexp{
 	SERVER_QUERY_TIME: regexp.MustCompile(`]: The time is (?s)(.*)\n`),
 }
 
+// TODO: move the 'Done' log here < for startCmd.
+var gameStateChanges = []string{
+	SERVER_SAVED_THE_GAME,
+}
+
 var defaultActionables = regexp.MustCompile(`/INFO]: (?s)(.*)\n`)
 
 type logUpdate struct {
@@ -34,6 +40,7 @@ type logUpdate struct {
 }
 
 func parseToLogUpdate(l string) (logUpdate, error) {
+	// Try and parse the raw log as an actionable.
 	for action, reg := range actionables {
 		if !strings.Contains(l, action) {
 			continue
@@ -42,6 +49,14 @@ func parseToLogUpdate(l string) (logUpdate, error) {
 			action: action,
 			target: reg.FindStringSubmatch(l)[1],
 		}, nil
+	}
+
+	// Try and parse the raw log as an gameStateChange.
+	for _, stateChange := range gameStateChanges {
+		if !strings.Contains(l, stateChange) {
+			continue
+		}
+		return logUpdate{action: SERVER_SAVED_THE_GAME}, nil
 	}
 
 	r := defaultActionables.FindStringSubmatch(l)

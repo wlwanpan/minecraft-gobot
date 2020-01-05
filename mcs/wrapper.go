@@ -35,6 +35,8 @@ var (
 	ErrServerAlreadyOnline = errors.New("server is already online")
 
 	ErrServerAlreadyOffline = errors.New("server is already offline")
+
+	ErrSessionAlreadyStopped = errors.New("session already stopped")
 )
 
 var wrapperStateMap = map[wrapperState]string{
@@ -159,14 +161,23 @@ func (w *wrapper) startGameSession() {
 	go w.gameSess.start()
 }
 
-func (w *wrapper) stopGameSession() {
+func (w *wrapper) stopGameSession() error {
 	if w.gameSess == nil {
-		return
+		return ErrSessionAlreadyStopped
+	}
+
+	if err := w.saveGameSession(); err != nil {
+		return err
 	}
 
 	log.Printf("Stopping current game session, game-tick=%d", w.gameSess.gametick)
 	w.gameSess.stop()
 	w.gameSess = nil
+	return nil
+}
+
+func (w *wrapper) saveGameSession() error {
+	return w.gameSess.save()
 }
 
 func (w *wrapper) start(mem int) error {
@@ -193,17 +204,17 @@ func (w *wrapper) stop() error {
 		return ErrServerAlreadyOffline
 	}
 
-	// Guarentee that the process is killed after 5s delay.
+	if err := w.stopGameSession(); err != nil {
+		return err
+	}
+
 	defer w.console.kill()
 
-	// Dont like this but works for now.
-	w.pushCmd("save-all flush")
-	<-time.After(5 * time.Second)
+	// TODO: move to game session stop
 	w.pushCmd("stop")
 	<-time.After(5 * time.Second)
 
 	w.nextState(WRAPPER_STATE_OFFLINE)
-	w.stopGameSession()
 	w.done <- true
 
 	return nil
