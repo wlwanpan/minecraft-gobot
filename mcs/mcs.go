@@ -54,8 +54,12 @@ func (s *server) Status(ctx context.Context, _ *services.EmptyReq) (*services.St
 	}, nil
 }
 
-func (s *server) Start(ctx context.Context, config *services.StartConfig) (*services.ServiceResp, error) {
-	memAlloc := int(config.GetMemAlloc())
+func (s *server) Backup(ctx context.Context, cfg *services.EmptyReq) (*services.BackupResp, error) {
+	return &services.BackupResp{}, nil
+}
+
+func (s *server) Start(ctx context.Context, cfg *services.StartConfig) (*services.ServiceResp, error) {
+	memAlloc := int(cfg.GetMemAlloc())
 	log.Printf("Request received: Start, mem-alloc=%d", memAlloc)
 
 	if s.wpr == nil {

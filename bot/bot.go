@@ -210,6 +210,13 @@ func (bot *Bot) backupCmd(ctx context.Context, s *discordgo.Session, m *discordg
 		return
 	}
 
+	resp, err := bot.mcsClient.Backup(ctx)
+	if err != nil {
+		sendMessageToChannel(s, m.ChannelID, err.Error())
+		return
+	}
+
+	log.Println(resp)
 	// TODO: Start backup process call...
 }
 

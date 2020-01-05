@@ -39,6 +39,10 @@ func (c *mcsClient) Status(ctx context.Context) (*services.StatusResp, error) {
 	return c.client.Status(ctx, &services.EmptyReq{})
 }
 
+func (c *mcsClient) Backup(ctx context.Context) (*services.BackupResp, error) {
+	return c.client.Backup(ctx, &services.EmptyReq{})
+}
+
 func (c *mcsClient) checkConn(ctx context.Context) error {
 	if c.grpcConn != nil && c.client != nil {
 		return c.Ping(ctx)
