@@ -15,6 +15,7 @@ type Config struct {
 	}
 	Bot struct {
 		McsAddr               string   `yaml:"mcs_addr"`
+		McsPort               int      `yaml:"mcs_port"`
 		WhitelistedChannelIDS []string `yaml:"whitelisted_channel_ids"`
 	}
 }

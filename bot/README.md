@@ -1,1 +1,1 @@
-# minecraft-discord-bot
+# minecraft-bot

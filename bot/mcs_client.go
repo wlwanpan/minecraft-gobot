@@ -3,6 +3,7 @@ package bot
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/wlwanpan/minecraft-gobot/config"
@@ -49,7 +50,8 @@ func (c *mcsClient) checkConn(ctx context.Context) error {
 }
 
 func (c *mcsClient) initConn() error {
-	conn, err := grpc.Dial(config.Cfg.Bot.McsAddr, grpc.WithInsecure())
+	mcsAddr := fmt.Sprintf("%s:%d", config.Cfg.Bot.McsAddr, config.Cfg.Bot.McsPort)
+	conn, err := grpc.Dial(mcsAddr, grpc.WithInsecure())
 	if err != nil {
 		log.Printf("error dialing mcs: %s", err)
 		return ErrMcsNotResponding

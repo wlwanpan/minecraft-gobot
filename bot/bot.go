@@ -20,6 +20,8 @@ const (
 	SERVER_STATUS_OFFLINE string = "offline"
 	SERVER_STATUS_ONLINE  string = "online"
 	SERVER_STATUS_LOADING string = "loading"
+
+	DEFAULT_MCS_PORT int = 25565
 )
 
 type Bot struct {
@@ -107,10 +109,10 @@ func (bot *Bot) startCmd(ctx context.Context, s *discordgo.Session, m *discordgo
 		return
 	}
 
-	config := &services.StartConfig{
+	cfg := &services.StartConfig{
 		MemAlloc: 3,
 	}
-	resp, err := bot.mcsClient.Start(ctx, config)
+	resp, err := bot.mcsClient.Start(ctx, cfg)
 	if err != nil {
 		errMessage := fmt.Sprintf("Error: %s", err)
 		sendMessageToChannel(s, m.ChannelID, errMessage)
@@ -134,7 +136,9 @@ func (bot *Bot) startCmd(ctx context.Context, s *discordgo.Session, m *discordgo
 
 			switch resp.GetServerState() {
 			case SERVER_STATUS_ONLINE:
-				sendMessageToChannel(s, m.ChannelID, "Server up and running!")
+				minecraftServerAddr := fmt.Sprintf("%s:%d", config.Cfg.Bot.McsAddr, DEFAULT_MCS_PORT)
+				message := fmt.Sprintf("Server up and running on: %s", minecraftServerAddr)
+				sendMessageToChannel(s, m.ChannelID, message)
 				return
 			case SERVER_STATUS_LOADING:
 				sendMessageToChannel(s, m.ChannelID, resp.GetMessage())
@@ -153,13 +157,18 @@ func (bot *Bot) closeCmd(ctx context.Context, s *discordgo.Session, m *discordgo
 		return
 	}
 
+	sendMessageToChannel(s, m.ChannelID, "Stopping server! (will take ~10s)")
+
 	resp, err := bot.mcsClient.Stop(ctx)
 	if err != nil {
+		log.Printf("Mcs error stopping: %s", err)
 		sendMessageToChannel(s, m.ChannelID, err.Error())
 		return
 	}
+	log.Println(resp.GetMessage())
 
-	sendMessageToChannel(s, m.ChannelID, resp.GetMessage())
+	sendMessageToChannel(s, m.ChannelID, "Server stopped!")
+	bot.statusCmd(ctx, s, m)
 }
 
 func (bot *Bot) statusCmd(ctx context.Context, s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -205,6 +214,9 @@ func (bot *Bot) backupCmd(ctx context.Context, s *discordgo.Session, m *discordg
 }
 
 func sendMessageToChannel(s *discordgo.Session, cid string, msg string) {
+	if msg == "" {
+		return
+	}
 	wrappedMsg := fmt.Sprintf("```%s```", msg)
 	s.ChannelMessageSend(cid, wrappedMsg)
 }

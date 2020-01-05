@@ -27,3 +27,9 @@
 .vscode
 bin
 certificates
+
+# Minecraft server files
+*.json
+world
+server.properties
+logs

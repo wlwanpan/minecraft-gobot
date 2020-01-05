@@ -193,13 +193,14 @@ func (w *wrapper) stop() error {
 		return ErrServerAlreadyOffline
 	}
 
-	w.pushCmd("stop")
-
 	// Guarentee that the process is killed after 5s delay.
+	defer w.console.kill()
+
+	// Dont like this but works for now.
+	w.pushCmd("save-all flush")
 	<-time.After(5 * time.Second)
-	if err := w.console.kill(); err != nil {
-		return err
-	}
+	w.pushCmd("stop")
+	<-time.After(5 * time.Second)
 
 	w.nextState(WRAPPER_STATE_OFFLINE)
 	w.stopGameSession()
