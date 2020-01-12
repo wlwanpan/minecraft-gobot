@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+rm -rf backups
 rm -rf world
 rm -rf logs
 rm banned-ips.json

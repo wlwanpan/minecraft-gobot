@@ -216,8 +216,8 @@ func (bot *Bot) backupCmd(ctx context.Context, s *discordgo.Session, m *discordg
 		return
 	}
 
-	log.Println(resp)
-	// TODO: Start backup process call...
+	message := fmt.Sprintf("Backup status: %s, message: %s", resp.Status.String(), resp.Message)
+	sendMessageToChannel(s, m.ChannelID, message)
 }
 
 func sendMessageToChannel(s *discordgo.Session, cid string, msg string) {

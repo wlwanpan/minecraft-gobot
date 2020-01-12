@@ -1,6 +1,13 @@
 syntax = "proto3";
 package services;
 
+enum BackupStatus {
+  FAILED = 0;
+  ZIPPING = 1;
+  UPLOADING = 2;
+  DONE = 3;
+}
+
 message EmptyReq {}
 
 message PingReq {}
@@ -23,8 +30,9 @@ message StatusResp {
 }
 
 message BackupResp {
-  string status = 1;
-  string link_url = 2;
+  BackupStatus status = 1;
+  string message = 2;
+  string link_url = 3;
 }
 
 service McsService {

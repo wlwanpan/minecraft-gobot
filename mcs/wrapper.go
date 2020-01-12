@@ -94,27 +94,6 @@ func (c *console) kill() error {
 	return c.execCmd.Process.Kill()
 }
 
-type sessionMetadata struct {
-	connectedPlayers []string
-
-	// TODO: move to new game session state.
-	isMarketOpen bool
-}
-
-func (meta *sessionMetadata) addConnectedPlayer(p string) {
-	meta.connectedPlayers = append(meta.connectedPlayers, p)
-}
-
-func (meta *sessionMetadata) removeConnectedPlayer(p string) {
-	n := []string{}
-	for _, player := range meta.connectedPlayers {
-		if player != p {
-			n = append(n, player)
-		}
-	}
-	meta.connectedPlayers = n
-}
-
 type wrapper struct {
 	sync.RWMutex
 	state   wrapperState
@@ -218,6 +197,9 @@ func (w *wrapper) stop() error {
 	w.done <- true
 
 	return nil
+}
+
+func (w *wrapper) startBackup() {
 }
 
 func (w *wrapper) processLogLine(line string) {

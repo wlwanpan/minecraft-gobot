@@ -15,7 +15,8 @@ const (
 )
 
 type server struct {
-	wpr *wrapper
+	wpr    *wrapper
+	backer *backer
 }
 
 func (s *server) listenAndServe(p int) error {
@@ -55,7 +56,47 @@ func (s *server) Status(ctx context.Context, _ *services.EmptyReq) (*services.St
 }
 
 func (s *server) Backup(ctx context.Context, cfg *services.EmptyReq) (*services.BackupResp, error) {
-	return &services.BackupResp{}, nil
+	log.Printf("Request received: Backup")
+	if s.wpr != nil && s.wpr.state != WRAPPER_STATE_OFFLINE {
+		return &services.BackupResp{
+			Status:  services.BackupStatus_FAILED,
+			Message: "server must be offline to perform a backup",
+		}, nil
+	}
+
+	if s.backer == nil {
+		log.Println("Backer offline, creating a new one")
+		s.backer = newBacker()
+
+		log.Println("Starting backup!")
+		s.backer.start()
+	}
+
+	var url string
+	var message string
+	var status services.BackupStatus
+
+	switch s.backer.state {
+	case BACKER_STATE_DONE:
+		status = services.BackupStatus_DONE
+		url = s.backer.lastUrl
+		s.backer = nil
+	case BACKER_STATE_FAILED:
+		status = services.BackupStatus_FAILED
+		message = "failed to perform backup"
+	case BACKER_STATE_ZIPPING:
+		status = services.BackupStatus_ZIPPING
+		message = "compressing world"
+	case BACKER_STATE_UPLOADING:
+		status = services.BackupStatus_UPLOADING
+		message = "uploading world"
+	}
+
+	return &services.BackupResp{
+		Status:  status,
+		Message: message,
+		LinkUrl: url,
+	}, nil
 }
 
 func (s *server) Start(ctx context.Context, cfg *services.StartConfig) (*services.ServiceResp, error) {
