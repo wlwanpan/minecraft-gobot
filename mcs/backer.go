@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/wlwanpan/minecraft-gobot/awsclient"
 )
 
 type backerState int
@@ -33,27 +35,55 @@ func newBacker() *backer {
 }
 
 func (b *backer) filename() string {
-	return fmt.Sprintf("backup_%s.zip", b.id)
+	return fmt.Sprintf("backup_%s", b.id)
 }
 
 func (b *backer) start() error {
-	// 1. zip the world directory
-	if err := b.zipworld(); err != nil {
-		log.Printf("Error zipping /world: error='%s'", err)
+	// zip the world directory
+	zipFilepath, err := b.zipworld()
+	if err != nil {
+		log.Printf("Error zipping '/world': error='%s'", err)
+		b.state = BACKER_STATE_FAILED
 		return err
 	}
 	log.Println("Successfully zipped!")
 
+	// upload zip file to S3.
+	resp, err := b.upload(zipFilepath)
+	if err != nil {
+		log.Printf("Error uploading zipped file: error='%s'", err)
+		b.state = BACKER_STATE_FAILED
+		return err
+	}
+
+	log.Printf("Backup successsful: url='%s'", resp.S3URL)
+	b.state = BACKER_STATE_DONE
+	b.lastUrl = resp.S3URL
 	return nil
 }
 
-func (b *backer) zipworld() error {
+func (b *backer) zipworld() (string, error) {
+	b.state = BACKER_STATE_ZIPPING
+
 	wd, _ := os.Getwd()
 	sourceDir := filepath.Join(wd, "world")
-	zipFile := filepath.Join(wd, "backups", b.filename())
+	zipPath := filepath.Join(wd, "backups", b.filename())
 	log.Printf("Zipping world dir: path='%s'", sourceDir)
 
-	return zipfiles(sourceDir, zipFile)
+	if err := zipfiles(sourceDir, zipPath); err != nil {
+		return "", err
+	}
+	return zipPath, nil
+}
+
+func (b *backer) upload(zipPath string) (*awsclient.S3StoreFileResp, error) {
+	b.state = BACKER_STATE_UPLOADING
+
+	client, err := awsclient.New()
+	if err != nil {
+		return nil, err
+	}
+	return client.StoreFile(zipPath, b.filename())
 }
 
 func zipfiles(s string, dest string) error {
@@ -66,7 +96,11 @@ func zipfiles(s string, dest string) error {
 	w := zip.NewWriter(zipFile)
 	defer w.Close()
 
-	return addFile(w, s, "")
+	if err := addFile(w, s, ""); err != nil {
+		return err
+	}
+
+	return err
 }
 
 func addFile(w *zip.Writer, base string, baseInZip string) error {

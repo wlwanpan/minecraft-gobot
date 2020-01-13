@@ -210,14 +210,32 @@ func (bot *Bot) backupCmd(ctx context.Context, s *discordgo.Session, m *discordg
 		return
 	}
 
-	resp, err := bot.mcsClient.Backup(ctx)
-	if err != nil {
-		sendMessageToChannel(s, m.ChannelID, err.Error())
-		return
-	}
+	sendMessageToChannel(s, m.ChannelID, "Starting backup process!")
+	ticker := time.NewTicker(3 * time.Second)
 
-	message := fmt.Sprintf("Backup status: %s, message: %s", resp.Status.String(), resp.Message)
-	sendMessageToChannel(s, m.ChannelID, message)
+	for {
+		select {
+		case <-ticker.C:
+			resp, err := bot.mcsClient.Backup(ctx)
+			if err != nil {
+				sendMessageToChannel(s, m.ChannelID, err.Error())
+				return
+			}
+
+			switch resp.Status {
+			case services.BackupStatus_ZIPPING:
+				sendMessageToChannel(s, m.ChannelID, "Compressing world...")
+			case services.BackupStatus_UPLOADING:
+				sendMessageToChannel(s, m.ChannelID, "Uploading compressed world...")
+			case services.BackupStatus_FAILED:
+				sendMessageToChannel(s, m.ChannelID, "Backup failed!")
+				return
+			case services.BackupStatus_DONE:
+				sendMessageToChannel(s, m.ChannelID, fmt.Sprintf("Backup done! -> %s", resp.LinkUrl))
+				return
+			}
+		}
+	}
 }
 
 func sendMessageToChannel(s *discordgo.Session, cid string, msg string) {
