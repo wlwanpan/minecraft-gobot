@@ -2,6 +2,7 @@
 mcs:
   port: 7777
   server_jar: "server.jar"
+  ec2_instance_id: "i-0dd138d76b910e575"
 
 bot:
   mcs_addr: "" # ec2-35-182-195-210.ca-central-1.compute.amazonaws.com
@@ -9,3 +10,7 @@ bot:
   whitelisted_channel_ids:
     - "654873630806769674"
     - "658519286356246542"
+
+aws:
+  region: "ca-central-1"
+  s3_bucket_name: "elasticbeanstalk-ca-central-1-597927659010"

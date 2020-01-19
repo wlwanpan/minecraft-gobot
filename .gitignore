@@ -30,6 +30,7 @@ certificates
 
 # Minecraft server files
 *.json
+*.yaml
 world
 server.properties
 logs
