@@ -27,6 +27,8 @@ const (
 	WRAPPER_STATE_ONLINE
 	// Minecraft serve.jar is still loading, has not yet caught 'Help' stdout.
 	WRAPPER_STATE_LOADING
+	// Minecraft server.jar is still running, but in the process of 'stopping'.
+	WRAPPER_STATE_STOPPING
 )
 
 var (
@@ -40,9 +42,10 @@ var (
 )
 
 var wrapperStateMap = map[wrapperState]string{
-	WRAPPER_STATE_OFFLINE: "offline",
-	WRAPPER_STATE_ONLINE:  "online",
-	WRAPPER_STATE_LOADING: "loading",
+	WRAPPER_STATE_OFFLINE:  "offline",
+	WRAPPER_STATE_ONLINE:   "online",
+	WRAPPER_STATE_LOADING:  "loading",
+	WRAPPER_STATE_STOPPING: "stopping",
 }
 
 func generateJavaRunCmd(ramAllocInGig int) *exec.Cmd {
@@ -118,6 +121,12 @@ func (w *wrapper) isLoading() bool {
 	return w.state == WRAPPER_STATE_LOADING
 }
 
+func (w *wrapper) isStopping() bool {
+	w.RLock()
+	defer w.RUnlock()
+	return w.state == WRAPPER_STATE_STOPPING
+}
+
 func (w *wrapper) isOnline() bool {
 	w.RLock()
 	defer w.RUnlock()
@@ -182,24 +191,23 @@ func (w *wrapper) stop() error {
 	if w.state != WRAPPER_STATE_ONLINE {
 		return ErrServerAlreadyOffline
 	}
+	w.nextState(WRAPPER_STATE_STOPPING)
 
 	if err := w.stopGameSession(); err != nil {
+		log.Printf("err stopping game session: err='%s'", err)
+		w.nextState(WRAPPER_STATE_ONLINE)
 		return err
 	}
-
-	defer w.console.kill()
 
 	// TODO: move to game session stop
 	w.pushCmd("stop")
 	<-time.After(5 * time.Second)
 
+	w.console.kill()
 	w.nextState(WRAPPER_STATE_OFFLINE)
 	w.done <- true
 
 	return nil
-}
-
-func (w *wrapper) startBackup() {
 }
 
 func (w *wrapper) processLogLine(line string) {
@@ -258,19 +266,29 @@ func (w *wrapper) nextState(s wrapperState) {
 	from := wrapperStateMap[w.state]
 	to := wrapperStateMap[s]
 
+	// State transition:
+	// offline -> loading -> online -> stopping -> offline >>
 	switch w.state {
 	case WRAPPER_STATE_OFFLINE:
 		if s != WRAPPER_STATE_LOADING {
 			log.Printf("Invalid transition: %s -> %s", from, to)
 			return
 		}
-	case WRAPPER_STATE_ONLINE:
-		if s != WRAPPER_STATE_OFFLINE {
+	case WRAPPER_STATE_LOADING:
+		if s != WRAPPER_STATE_ONLINE {
 			log.Printf("Invalid transition: %s -> %s", from, to)
 			return
 		}
-	case WRAPPER_STATE_LOADING:
-		// all good!
+	case WRAPPER_STATE_ONLINE:
+		if s != WRAPPER_STATE_STOPPING {
+			log.Printf("Invalid transition: %s -> %s", from, to)
+			return
+		}
+	case WRAPPER_STATE_STOPPING:
+		if s != WRAPPER_STATE_OFFLINE || s != WRAPPER_STATE_ONLINE {
+			log.Printf("Invalid transition: %s -> %s", from, to)
+			return
+		}
 	default:
 		log.Fatalf("Current state: %s not handled", from)
 	}
