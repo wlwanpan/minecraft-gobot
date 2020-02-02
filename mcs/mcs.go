@@ -40,24 +40,24 @@ func (s *server) Ping(ctx context.Context, _ *services.PingReq) (*services.PongR
 func (s *server) Status(ctx context.Context, _ *services.EmptyReq) (*services.StatusResp, error) {
 	log.Println("Request received: Status")
 
-	var state wrapperState
 	var message string
+	var state string
 	if s.wpr == nil {
 		state = WRAPPER_STATE_OFFLINE
 	} else {
-		state = s.wpr.state
+		state = s.wpr.stateMachine.Current()
 		message = s.wpr.lastLogLine
 	}
 
 	return &services.StatusResp{
-		ServerState: wrapperStateMap[state],
+		ServerState: state,
 		Message:     message,
 	}, nil
 }
 
 func (s *server) Backup(ctx context.Context, cfg *services.EmptyReq) (*services.BackupResp, error) {
 	log.Printf("Request received: Backup")
-	if s.wpr != nil && s.wpr.state != WRAPPER_STATE_OFFLINE {
+	if s.wpr != nil && !s.wpr.isOffline() {
 		return &services.BackupResp{
 			Status:  services.BackupStatus_FAILED,
 			Message: "server must be offline to perform a backup",
