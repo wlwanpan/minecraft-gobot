@@ -20,6 +20,11 @@ bot:
   whitelisted_channel_ids:
     - CHANNEL_ID_1
     - CHANNEL_ID_2
+
+# Required only for S3 backup uploads.
+aws:
+  region: AWS_REGION
+  s3_bucket_name: AWS_S3_BUCKET_NAME
 ```
 
 ## Basic commands
