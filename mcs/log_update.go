@@ -10,10 +10,9 @@ const (
 	PLAYER_JOINED string = "joined"
 	PLAYER_LEFT   string = "left"
 
-	SERVER_QUERY_TIME      string = "time is"
-	SERVER_PREPARING_SPAWN string = "Preparing spawn"
-	SERVER_PREPARING_LEVEL string = "Preparing level"
-	SERVER_SAVED_THE_GAME  string = "Saved the game"
+	SERVER_QUERY_TIME     string = "time is"
+	SERVER_SAVED_THE_GAME string = "Saved"
+	SERVER_DONE           string = "Done"
 )
 
 var (
@@ -21,14 +20,11 @@ var (
 )
 
 var actionables = map[string]*regexp.Regexp{
-	PLAYER_JOINED:     regexp.MustCompile(`]: (?s)(.*) joined the game`),
-	PLAYER_LEFT:       regexp.MustCompile(`]: (?s)(.*) left the game`),
-	SERVER_QUERY_TIME: regexp.MustCompile(`]: The time is (?s)(.*)\n`),
-}
-
-// TODO: move the 'Done' log here < for startCmd.
-var gameStateChanges = []string{
-	SERVER_SAVED_THE_GAME,
+	PLAYER_JOINED:         regexp.MustCompile(`]: (?s)(.*) joined the game\n`),
+	PLAYER_LEFT:           regexp.MustCompile(`]: (?s)(.*) left the game\n`),
+	SERVER_QUERY_TIME:     regexp.MustCompile(`]: The time is (?s)(.*)\n`),
+	SERVER_SAVED_THE_GAME: regexp.MustCompile(`]: Saved (?s)(.*)\n`),
+	SERVER_DONE:           regexp.MustCompile(`]: Done (?s)(.*)! For help, type "help"\n`),
 }
 
 var defaultActionables = regexp.MustCompile(`/INFO]: (?s)(.*)\n`)
@@ -49,14 +45,6 @@ func parseToLogUpdate(l string) (logUpdate, error) {
 			action: action,
 			target: reg.FindStringSubmatch(l)[1],
 		}, nil
-	}
-
-	// Try and parse the raw log as an gameStateChange.
-	for _, stateChange := range gameStateChanges {
-		if !strings.Contains(l, stateChange) {
-			continue
-		}
-		return logUpdate{action: SERVER_SAVED_THE_GAME}, nil
 	}
 
 	r := defaultActionables.FindStringSubmatch(l)

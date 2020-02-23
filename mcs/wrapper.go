@@ -40,39 +40,6 @@ var (
 	ErrSessionAlreadyStopped = errors.New("session already stopped")
 )
 
-// offline -> loading -> online -> stopping -> offline >>
-var wrapperStateMachine = fsm.NewFSM(
-	WRAPPER_STATE_OFFLINE,
-	fsm.Events{
-		fsm.EventDesc{
-			Name: WRAPPER_STATE_OFFLINE,
-			Src:  []string{WRAPPER_STATE_LOADING},
-		},
-		fsm.EventDesc{
-			Name: WRAPPER_STATE_LOADING,
-			Src:  []string{WRAPPER_STATE_OFFLINE},
-			Dst:  WRAPPER_STATE_ONLINE,
-		},
-		fsm.EventDesc{
-			Name: WRAPPER_STATE_ONLINE,
-			Src:  []string{WRAPPER_STATE_LOADING},
-			Dst:  WRAPPER_STATE_STOPPING,
-		},
-		fsm.EventDesc{
-			Name: WRAPPER_STATE_STOPPING,
-			Src:  []string{WRAPPER_STATE_ONLINE},
-			Dst:  WRAPPER_STATE_OFFLINE,
-		},
-	},
-	map[string]fsm.Callback{
-		"enter_state": logStateChanges,
-	},
-)
-
-func logStateChanges(e *fsm.Event) {
-	log.Printf("State changes: %s -> %s", e.Src, e.Dst)
-}
-
 func generateJavaRunCmd(ramAllocInGig int) *exec.Cmd {
 	ramAllocInMb := strconv.Itoa(ramAllocInGig * MEM_CONVERSION)
 	initialMemAlloc := strings.Join([]string{"-Xmx", ramAllocInMb, "M"}, "")
@@ -134,9 +101,39 @@ type wrapper struct {
 
 func newWrapper() *wrapper {
 	return &wrapper{
-		console:      &console{},
-		stateMachine: wrapperStateMachine,
-		done:         make(chan bool),
+		console: &console{},
+		done:    make(chan bool),
+		// stateMachine: offline -> loading -> online -> stopping >>
+		stateMachine: fsm.NewFSM(
+			WRAPPER_STATE_OFFLINE,
+			fsm.Events{
+				fsm.EventDesc{
+					Name: WRAPPER_STATE_OFFLINE,
+					Src:  []string{WRAPPER_STATE_STOPPING},
+					Dst:  WRAPPER_STATE_LOADING,
+				},
+				fsm.EventDesc{
+					Name: WRAPPER_STATE_LOADING,
+					Src:  []string{WRAPPER_STATE_OFFLINE},
+					Dst:  WRAPPER_STATE_ONLINE,
+				},
+				fsm.EventDesc{
+					Name: WRAPPER_STATE_ONLINE,
+					Src:  []string{WRAPPER_STATE_LOADING},
+					Dst:  WRAPPER_STATE_STOPPING,
+				},
+				fsm.EventDesc{
+					Name: WRAPPER_STATE_STOPPING,
+					Src:  []string{WRAPPER_STATE_ONLINE},
+					Dst:  WRAPPER_STATE_OFFLINE,
+				},
+			},
+			map[string]fsm.Callback{
+				"enter_state": func(e *fsm.Event) {
+					log.Printf("State changes: %s -> %s", e.Src, e.Dst)
+				},
+			},
+		),
 	}
 }
 
@@ -182,7 +179,19 @@ func (w *wrapper) stopGameSession() error {
 }
 
 func (w *wrapper) saveGameSession() error {
-	return w.gameSess.save()
+	err := w.gameSess.save()
+	if err == ErrSavingGameTimedOut {
+		// TODO: fix 'save the game' log actionable.
+		return nil
+	}
+	return err
+}
+
+func (w *wrapper) pushUpdateToGameSession(update logUpdate) {
+	if w.gameSess == nil {
+		return
+	}
+	w.gameSess.updates <- update
 }
 
 func (w *wrapper) start(mem int) error {
@@ -220,12 +229,15 @@ func (w *wrapper) stop() error {
 		return err
 	}
 
+	if err := w.stateMachine.Event(WRAPPER_STATE_OFFLINE); err != nil {
+		return err
+	}
+
 	// TODO: move to game session stop
 	w.pushCmd("stop")
 	<-time.After(5 * time.Second)
 
 	w.console.kill()
-	w.stateMachine.Event(WRAPPER_STATE_OFFLINE)
 	w.done <- true
 
 	return nil
@@ -245,8 +257,16 @@ func (w *wrapper) processLogLine(line string) {
 	log.Printf("Update detected: action='%s', target='%s', message='%s'", update.action, update.target, update.message)
 	w.lastLogLine = update.message
 
-	if w.gameSess != nil {
-		w.gameSess.updates <- update
+	switch update.action {
+	case SERVER_DONE:
+		if err := w.stateMachine.Event(WRAPPER_STATE_ONLINE); err != nil {
+			log.Printf("State transition error: %s", err)
+			return
+		}
+		go w.startGameSession()
+	case SERVER_QUERY_TIME, SERVER_SAVED_THE_GAME:
+		w.pushUpdateToGameSession(update)
+	default:
 	}
 }
 
@@ -263,14 +283,6 @@ func (w *wrapper) processCmdOut() {
 		}
 
 		log.Printf("Raw log='%s'", line)
-
-		// TODO: Move the "Done" cond here to log_update
-		if strings.Contains(line, "Done") {
-			w.stateMachine.Event(WRAPPER_STATE_ONLINE)
-			go w.startGameSession()
-			continue
-		}
-
 		w.processLogLine(line)
 	}
 }
