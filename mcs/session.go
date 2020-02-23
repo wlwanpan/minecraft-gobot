@@ -15,6 +15,8 @@ var (
 const (
 	GAME_TICKER_SYNC_INTERVAL time.Duration = 30 * time.Second
 
+	GAME_SESSION_SAVE_TIMEOUT time.Duration = 5 * time.Second
+
 	MARKET_OPEN_GAMETICK int64 = 2000
 
 	MARKET_CLOSE_GAMETICK int64 = 9000
@@ -92,7 +94,7 @@ func (s *gameSession) save() error {
 	select {
 	case <-s.saves:
 		return nil
-	case <-time.After(5 * time.Second):
+	case <-time.After(GAME_SESSION_SAVE_TIMEOUT):
 		return ErrSavingGameTimedOut
 	}
 }
@@ -127,6 +129,7 @@ func (s *gameSession) processUpdates(stop chan bool) {
 				s.saves <- true
 			}
 		case <-stop:
+			fmt.Println("Stopping processUpdates")
 			return
 		}
 	}

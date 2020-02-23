@@ -40,24 +40,24 @@ func (s *server) Ping(ctx context.Context, _ *services.PingReq) (*services.PongR
 func (s *server) Status(ctx context.Context, _ *services.EmptyReq) (*services.StatusResp, error) {
 	log.Println("Request received: Status")
 
-	var state wrapperState
 	var message string
+	var state string
 	if s.wpr == nil {
 		state = WRAPPER_STATE_OFFLINE
 	} else {
-		state = s.wpr.state
+		state = s.wpr.stateMachine.Current()
 		message = s.wpr.lastLogLine
 	}
 
 	return &services.StatusResp{
-		ServerState: wrapperStateMap[state],
+		ServerState: state,
 		Message:     message,
 	}, nil
 }
 
 func (s *server) Backup(ctx context.Context, cfg *services.EmptyReq) (*services.BackupResp, error) {
 	log.Printf("Request received: Backup")
-	if s.wpr != nil && s.wpr.state != WRAPPER_STATE_OFFLINE {
+	if s.wpr != nil && !s.wpr.isOffline() {
 		return &services.BackupResp{
 			Status:  services.BackupStatus_FAILED,
 			Message: "server must be offline to perform a backup",
@@ -108,40 +108,25 @@ func (s *server) Start(ctx context.Context, cfg *services.StartConfig) (*service
 	}
 
 	if err := s.wpr.start(memAlloc); err != nil {
-		return &services.ServiceResp{
-			Message: err.Error(),
-			Status:  500,
-		}, nil
+		return &services.ServiceResp{Message: err.Error()}, nil
 	}
-	return &services.ServiceResp{
-		Message: "Starting server!",
-		Status:  200,
-	}, nil
+	return &services.ServiceResp{Message: "Starting server!"}, nil
 }
 
 func (s *server) Stop(ctx context.Context, _ *services.EmptyReq) (*services.ServiceResp, error) {
 	log.Println("Request received: Stop")
 
 	if s.wpr == nil {
-		return &services.ServiceResp{
-			Message: "Server already offline",
-			Status:  500,
-		}, nil
+		return &services.ServiceResp{Message: "Server already offline"}, nil
 	}
 
 	if err := s.wpr.stop(); err != nil {
-		return &services.ServiceResp{
-			Message: err.Error(),
-			Status:  500,
-		}, nil
+		return &services.ServiceResp{Message: err.Error()}, nil
 	}
 
 	s.wpr = nil
 
-	return &services.ServiceResp{
-		Message: "Stopping server!",
-		Status:  200,
-	}, nil
+	return &services.ServiceResp{Message: "Stopping server!"}, nil
 }
 
 func Start(port int) error {

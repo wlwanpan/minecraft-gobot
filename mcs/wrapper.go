@@ -12,23 +12,22 @@ import (
 	"sync"
 	"time"
 
+	"github.com/looplab/fsm"
 	"github.com/wlwanpan/minecraft-gobot/config"
 )
-
-type wrapperState int
 
 const (
 	NEWLINE_BYTE byte = '\n'
 
 	MEM_CONVERSION int = 1024
 	// mcs initialized but no operation was performed yet, sleeping state.
-	WRAPPER_STATE_OFFLINE wrapperState = iota
+	WRAPPER_STATE_OFFLINE string = "offline"
 	// Minecraft server.jar successfully loaded and stdout 'DONE' is caught.
-	WRAPPER_STATE_ONLINE
+	WRAPPER_STATE_ONLINE string = "online"
 	// Minecraft serve.jar is still loading, has not yet caught 'Help' stdout.
-	WRAPPER_STATE_LOADING
+	WRAPPER_STATE_LOADING string = "loading"
 	// Minecraft server.jar is still running, but in the process of 'stopping'.
-	WRAPPER_STATE_STOPPING
+	WRAPPER_STATE_STOPPING string = "stopping"
 )
 
 var (
@@ -40,13 +39,6 @@ var (
 
 	ErrSessionAlreadyStopped = errors.New("session already stopped")
 )
-
-var wrapperStateMap = map[wrapperState]string{
-	WRAPPER_STATE_OFFLINE:  "offline",
-	WRAPPER_STATE_ONLINE:   "online",
-	WRAPPER_STATE_LOADING:  "loading",
-	WRAPPER_STATE_STOPPING: "stopping",
-}
 
 func generateJavaRunCmd(ramAllocInGig int) *exec.Cmd {
 	ramAllocInMb := strconv.Itoa(ramAllocInGig * MEM_CONVERSION)
@@ -99,9 +91,9 @@ func (c *console) kill() error {
 
 type wrapper struct {
 	sync.RWMutex
-	state   wrapperState
-	console *console
-	done    chan bool
+	stateMachine *fsm.FSM
+	console      *console
+	done         chan bool
 
 	gameSess    *gameSession
 	lastLogLine string
@@ -109,34 +101,56 @@ type wrapper struct {
 
 func newWrapper() *wrapper {
 	return &wrapper{
-		state:   WRAPPER_STATE_OFFLINE,
 		console: &console{},
 		done:    make(chan bool),
+		// stateMachine: offline -> loading -> online -> stopping >>
+		stateMachine: fsm.NewFSM(
+			WRAPPER_STATE_OFFLINE,
+			fsm.Events{
+				fsm.EventDesc{
+					Name: WRAPPER_STATE_OFFLINE,
+					Src:  []string{WRAPPER_STATE_STOPPING},
+					Dst:  WRAPPER_STATE_LOADING,
+				},
+				fsm.EventDesc{
+					Name: WRAPPER_STATE_LOADING,
+					Src:  []string{WRAPPER_STATE_OFFLINE},
+					Dst:  WRAPPER_STATE_ONLINE,
+				},
+				fsm.EventDesc{
+					Name: WRAPPER_STATE_ONLINE,
+					Src:  []string{WRAPPER_STATE_LOADING},
+					Dst:  WRAPPER_STATE_STOPPING,
+				},
+				fsm.EventDesc{
+					Name: WRAPPER_STATE_STOPPING,
+					Src:  []string{WRAPPER_STATE_ONLINE},
+					Dst:  WRAPPER_STATE_OFFLINE,
+				},
+			},
+			map[string]fsm.Callback{
+				"enter_state": func(e *fsm.Event) {
+					log.Printf("State changes: %s -> %s", e.Src, e.Dst)
+				},
+			},
+		),
 	}
 }
 
 func (w *wrapper) isLoading() bool {
-	w.RLock()
-	defer w.RUnlock()
-	return w.state == WRAPPER_STATE_LOADING
+	return w.stateMachine.Current() == WRAPPER_STATE_LOADING
 }
 
 func (w *wrapper) isStopping() bool {
-	w.RLock()
-	defer w.RUnlock()
-	return w.state == WRAPPER_STATE_STOPPING
+	return w.stateMachine.Current() == WRAPPER_STATE_STOPPING
 }
 
 func (w *wrapper) isOnline() bool {
-	w.RLock()
-	defer w.RUnlock()
-	return w.state == WRAPPER_STATE_ONLINE
+	return w.stateMachine.Current() == WRAPPER_STATE_ONLINE
 }
 
 func (w *wrapper) isOffline() bool {
-	w.RLock()
-	defer w.RUnlock()
-	return w.state == WRAPPER_STATE_OFFLINE
+	return w.stateMachine.Current() == WRAPPER_STATE_OFFLINE
 }
 
 func (w *wrapper) startGameSession() {
@@ -146,7 +160,7 @@ func (w *wrapper) startGameSession() {
 
 	log.Println("Starting new game session")
 	w.gameSess = newGameSession(w.console)
-	go w.gameSess.start()
+	w.gameSess.start()
 }
 
 func (w *wrapper) stopGameSession() error {
@@ -165,7 +179,19 @@ func (w *wrapper) stopGameSession() error {
 }
 
 func (w *wrapper) saveGameSession() error {
-	return w.gameSess.save()
+	err := w.gameSess.save()
+	if err == ErrSavingGameTimedOut {
+		// TODO: fix 'save the game' log actionable.
+		return nil
+	}
+	return err
+}
+
+func (w *wrapper) pushUpdateToGameSession(update logUpdate) {
+	if w.gameSess == nil {
+		return
+	}
+	w.gameSess.updates <- update
 }
 
 func (w *wrapper) start(mem int) error {
@@ -176,11 +202,13 @@ func (w *wrapper) start(mem int) error {
 		return ErrServerAlreadyOnline
 	}
 
-	if err := w.console.execJava(mem); err != nil {
+	if err := w.stateMachine.Event(WRAPPER_STATE_LOADING); err != nil {
 		return err
 	}
-
-	w.nextState(WRAPPER_STATE_LOADING)
+	if err := w.console.execJava(mem); err != nil {
+		w.stateMachine.SetState(WRAPPER_STATE_OFFLINE)
+		return err
+	}
 
 	go w.processCmdOut() // exits on EOF
 
@@ -188,14 +216,20 @@ func (w *wrapper) start(mem int) error {
 }
 
 func (w *wrapper) stop() error {
-	if w.state != WRAPPER_STATE_ONLINE {
+	if !w.isOnline() {
 		return ErrServerAlreadyOffline
 	}
-	w.nextState(WRAPPER_STATE_STOPPING)
+	if err := w.stateMachine.Event(WRAPPER_STATE_STOPPING); err != nil {
+		return err
+	}
 
 	if err := w.stopGameSession(); err != nil {
 		log.Printf("err stopping game session: err='%s'", err)
-		w.nextState(WRAPPER_STATE_ONLINE)
+		w.stateMachine.SetState(WRAPPER_STATE_ONLINE)
+		return err
+	}
+
+	if err := w.stateMachine.Event(WRAPPER_STATE_OFFLINE); err != nil {
 		return err
 	}
 
@@ -204,7 +238,6 @@ func (w *wrapper) stop() error {
 	<-time.After(5 * time.Second)
 
 	w.console.kill()
-	w.nextState(WRAPPER_STATE_OFFLINE)
 	w.done <- true
 
 	return nil
@@ -224,8 +257,16 @@ func (w *wrapper) processLogLine(line string) {
 	log.Printf("Update detected: action='%s', target='%s', message='%s'", update.action, update.target, update.message)
 	w.lastLogLine = update.message
 
-	if w.gameSess != nil {
-		w.gameSess.updates <- update
+	switch update.action {
+	case SERVER_DONE:
+		if err := w.stateMachine.Event(WRAPPER_STATE_ONLINE); err != nil {
+			log.Printf("State transition error: %s", err)
+			return
+		}
+		go w.startGameSession()
+	case SERVER_QUERY_TIME, SERVER_SAVED_THE_GAME:
+		w.pushUpdateToGameSession(update)
+	default:
 	}
 }
 
@@ -242,14 +283,6 @@ func (w *wrapper) processCmdOut() {
 		}
 
 		log.Printf("Raw log='%s'", line)
-
-		// TODO: Move the "Done" cond here to log_update
-		if strings.Contains(line, "Done") {
-			w.nextState(WRAPPER_STATE_ONLINE)
-			w.startGameSession()
-			continue
-		}
-
 		w.processLogLine(line)
 	}
 }
@@ -257,42 +290,4 @@ func (w *wrapper) processCmdOut() {
 func (w *wrapper) pushCmd(cmd string) error {
 	log.Printf("pushing command=%s", cmd)
 	return w.console.write(cmd)
-}
-
-func (w *wrapper) nextState(s wrapperState) {
-	w.Lock()
-	defer w.Unlock()
-
-	from := wrapperStateMap[w.state]
-	to := wrapperStateMap[s]
-
-	// State transition:
-	// offline -> loading -> online -> stopping -> offline >>
-	switch w.state {
-	case WRAPPER_STATE_OFFLINE:
-		if s != WRAPPER_STATE_LOADING {
-			log.Printf("Invalid transition: %s -> %s", from, to)
-			return
-		}
-	case WRAPPER_STATE_LOADING:
-		if s != WRAPPER_STATE_ONLINE {
-			log.Printf("Invalid transition: %s -> %s", from, to)
-			return
-		}
-	case WRAPPER_STATE_ONLINE:
-		if s != WRAPPER_STATE_STOPPING {
-			log.Printf("Invalid transition: %s -> %s", from, to)
-			return
-		}
-	case WRAPPER_STATE_STOPPING:
-		if s != WRAPPER_STATE_OFFLINE || s != WRAPPER_STATE_ONLINE {
-			log.Printf("Invalid transition: %s -> %s", from, to)
-			return
-		}
-	default:
-		log.Fatalf("Current state: %s not handled", from)
-	}
-
-	log.Printf("State transition: %s -> %s", from, to)
-	w.state = s
 }

@@ -167,7 +167,6 @@ func (bot *Bot) closeCmd(ctx context.Context, s *discordgo.Session, m *discordgo
 	}
 	log.Println(resp.GetMessage())
 
-	sendMessageToChannel(s, m.ChannelID, "Server stopped!")
 	bot.statusCmd(ctx, s, m)
 }
 
