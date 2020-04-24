@@ -202,9 +202,7 @@ func (w *wrapper) start(mem int) error {
 		return ErrServerAlreadyOnline
 	}
 
-	if err := w.stateMachine.Event(WRAPPER_STATE_LOADING); err != nil {
-		return err
-	}
+	w.stateMachine.SetState(WRAPPER_STATE_LOADING)
 	if err := w.console.execJava(mem); err != nil {
 		w.stateMachine.SetState(WRAPPER_STATE_OFFLINE)
 		return err
@@ -219,9 +217,7 @@ func (w *wrapper) stop() error {
 	if !w.isOnline() {
 		return ErrServerAlreadyOffline
 	}
-	if err := w.stateMachine.Event(WRAPPER_STATE_STOPPING); err != nil {
-		return err
-	}
+	w.stateMachine.SetState(WRAPPER_STATE_STOPPING)
 
 	if err := w.stopGameSession(); err != nil {
 		log.Printf("err stopping game session: err='%s'", err)
@@ -229,9 +225,7 @@ func (w *wrapper) stop() error {
 		return err
 	}
 
-	if err := w.stateMachine.Event(WRAPPER_STATE_OFFLINE); err != nil {
-		return err
-	}
+	w.stateMachine.SetState(WRAPPER_STATE_OFFLINE)
 
 	// TODO: move to game session stop
 	w.pushCmd("stop")
@@ -259,10 +253,7 @@ func (w *wrapper) processLogLine(line string) {
 
 	switch update.action {
 	case SERVER_DONE:
-		if err := w.stateMachine.Event(WRAPPER_STATE_ONLINE); err != nil {
-			log.Printf("State transition error: %s", err)
-			return
-		}
+		w.stateMachine.SetState(WRAPPER_STATE_ONLINE)
 		go w.startGameSession()
 	case SERVER_QUERY_TIME, SERVER_SAVED_THE_GAME:
 		w.pushUpdateToGameSession(update)

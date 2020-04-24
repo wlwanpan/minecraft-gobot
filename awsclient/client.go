@@ -46,7 +46,7 @@ type S3StoreFileResp struct {
 
 func NewSession() (*session.Session, error) {
 	return session.NewSession(&aws.Config{
-		Region: aws.String(config.Cfg.AWS.Region),
+		Region: aws.String(config.Cfg.Aws.Region),
 	})
 }
 
@@ -81,7 +81,8 @@ func (c *AWSClient) StoreFile(zipPath string, filename string) (*S3StoreFileResp
 
 	log.Printf("aws s3: uploading file='%s'", stat.Name())
 
-	s3BucketName := config.Cfg.AWS.S3BucketName
+	s3BucketName := config.Cfg.Aws.S3BucketName
+	s3BucketRegion := config.Cfg.Aws.Region
 	output, err := c.storage.PutObject(&s3.PutObjectInput{
 		Bucket:               aws.String(s3BucketName),
 		Key:                  aws.String(filename),
@@ -101,7 +102,7 @@ func (c *AWSClient) StoreFile(zipPath string, filename string) (*S3StoreFileResp
 	return &S3StoreFileResp{
 		Name:  filename,
 		Size:  size,
-		S3URL: fmt.Sprintf("https://%s.s3.ca-central-1.amazonaws.com/%s", s3BucketName, filename),
+		S3URL: fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", s3BucketRegion, s3BucketName, filename),
 	}, nil
 }
 

@@ -19,7 +19,7 @@ type Config struct {
 		McsPort               int      `yaml:"mcs_port"`
 		WhitelistedChannelIDS []string `yaml:"whitelisted_channel_ids"`
 	}
-	AWS struct {
+	Aws struct {
 		Region       string `yaml:"region"`
 		S3BucketName string `yaml:"s3_bucket_name"`
 	}
