@@ -1,4 +1,4 @@
-package bot
+package mcs
 
 import (
 	"context"
@@ -16,7 +16,6 @@ import (
 )
 
 const (
-	// Direcly maps mcs.WRAPPER_STATE_*
 	SERVER_STATUS_OFFLINE string = "offline"
 	SERVER_STATUS_ONLINE  string = "online"
 	SERVER_STATUS_LOADING string = "loading"
@@ -26,11 +25,10 @@ const (
 
 type Bot struct {
 	sync.Mutex
-	sess      *discordgo.Session
-	mcsClient *mcsClient
+	sess *discordgo.Session
 }
 
-func New(token string) (*Bot, error) {
+func NewBot(token string) (*Bot, error) {
 	sess, err := discordgo.New("Bot " + token)
 	if err != nil {
 		return nil, err
@@ -43,8 +41,6 @@ func New(token string) (*Bot, error) {
 
 	// Add discord ws message handlers.
 	b.sess.AddHandler(b.messageHandler)
-	go b.mcsClient.initConn()
-
 	return b, nil
 }
 
@@ -65,9 +61,6 @@ func (bot *Bot) Run() error {
 func (bot *Bot) Close() {
 	if bot.sess != nil {
 		bot.sess.Close()
-	}
-	if bot.mcsClient != nil {
-		bot.mcsClient.closeConn()
 	}
 }
 

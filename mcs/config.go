@@ -1,12 +1,10 @@
-package config
+package mcs
 
 import (
 	"os"
 
 	"gopkg.in/yaml.v2"
 )
-
-var Cfg *Config
 
 type Config struct {
 	Mcs struct {
@@ -15,8 +13,6 @@ type Config struct {
 		EC2InstanceID string `yaml:"ec2_instance_id"`
 	}
 	Bot struct {
-		McsAddr               string   `yaml:"mcs_addr"`
-		McsPort               int      `yaml:"mcs_port"`
 		WhitelistedChannelIDS []string `yaml:"whitelisted_channel_ids"`
 	}
 	Aws struct {
@@ -25,15 +21,16 @@ type Config struct {
 	}
 }
 
-func Load() error {
+func LoadConfig() (*Config, error) {
 	cfgFile, err := os.Open("config.yaml")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer cfgFile.Close()
 
-	Cfg = &Config{}
+	cfg := &Config{}
 
 	d := yaml.NewDecoder(cfgFile)
-	return d.Decode(Cfg)
+	err = d.Decode(cfg)
+	return cfg, err
 }

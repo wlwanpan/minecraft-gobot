@@ -1,4 +1,4 @@
-package awsclient
+package mcs
 
 import (
 	"bytes"
@@ -8,12 +8,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/wlwanpan/minecraft-gobot/config"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/wlwanpan/minecraft-gobot/config"
 )
 
 var (
@@ -21,17 +20,6 @@ var (
 
 	ErrNoRunningInstances = errors.New("no running instances")
 )
-
-const (
-	INSTANCE_PENDING_CODE       instanceStateCode = 0
-	INSTANCE_RUNNING_CODE       instanceStateCode = 16
-	INSTANCE_SHUTTING_DOWN_CODE instanceStateCode = 32
-	INSTANCE_TERMINATED_CODE    instanceStateCode = 48
-	INSTANCE_STOPPING_CODE      instanceStateCode = 64
-	INSTANCE_STOPPED_CODE       instanceStateCode = 80
-)
-
-type instanceStateCode int
 
 type EC2StatusResp struct {
 	StateCode instanceStateCode
@@ -103,60 +91,5 @@ func (c *AWSClient) StoreFile(zipPath string, filename string) (*S3StoreFileResp
 		Name:  filename,
 		Size:  size,
 		S3URL: fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", s3BucketRegion, s3BucketName, filename),
-	}, nil
-}
-
-func (c *AWSClient) StartInstance() error {
-	config := &ec2.StartInstancesInput{
-		InstanceIds: []*string{
-			aws.String(config.Cfg.Mcs.EC2InstanceID),
-		},
-	}
-	out, err := c.svc.StartInstances(config)
-	if err != nil {
-		return err
-	}
-
-	log.Printf("Starting instance: %s", out.GoString())
-	return nil
-}
-
-func (c *AWSClient) StopInstance() error {
-	config := &ec2.StopInstancesInput{
-		InstanceIds: []*string{
-			aws.String(config.Cfg.Mcs.EC2InstanceID),
-		},
-	}
-	out, err := c.svc.StopInstances(config)
-	if err != nil {
-		return err
-	}
-
-	log.Printf("Stopping instance: %s", out.GoString())
-	return nil
-}
-
-func (c *AWSClient) InstanceStatus() (*EC2StatusResp, error) {
-	config := &ec2.DescribeInstanceStatusInput{
-		InstanceIds: []*string{
-			aws.String(config.Cfg.Mcs.EC2InstanceID),
-		},
-	}
-	out, err := c.svc.DescribeInstanceStatus(config)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Printf("Raw response: %s", out.GoString())
-
-	if len(out.InstanceStatuses) == 0 {
-		return nil, ErrNoRunningInstances
-	}
-
-	status := out.InstanceStatuses[0]
-
-	return &EC2StatusResp{
-		StateCode: instanceStateCode(*status.InstanceState.Code),
-		State:     *status.InstanceStatus.Status,
 	}, nil
 }

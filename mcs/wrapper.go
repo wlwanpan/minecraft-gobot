@@ -89,7 +89,7 @@ func (c *console) kill() error {
 	return c.execCmd.Process.Kill()
 }
 
-type wrapper struct {
+type Wrapper struct {
 	sync.RWMutex
 	stateMachine *fsm.FSM
 	console      *console
@@ -99,8 +99,8 @@ type wrapper struct {
 	lastLogLine string
 }
 
-func newWrapper() *wrapper {
-	return &wrapper{
+func newWrapper() *Wrapper {
+	return &Wrapper{
 		console: &console{},
 		done:    make(chan bool),
 		// stateMachine: offline -> loading -> online -> stopping >>
@@ -137,23 +137,23 @@ func newWrapper() *wrapper {
 	}
 }
 
-func (w *wrapper) isLoading() bool {
+func (w *Wrapper) isLoading() bool {
 	return w.stateMachine.Current() == WRAPPER_STATE_LOADING
 }
 
-func (w *wrapper) isStopping() bool {
+func (w *Wrapper) isStopping() bool {
 	return w.stateMachine.Current() == WRAPPER_STATE_STOPPING
 }
 
-func (w *wrapper) isOnline() bool {
+func (w *Wrapper) isOnline() bool {
 	return w.stateMachine.Current() == WRAPPER_STATE_ONLINE
 }
 
-func (w *wrapper) isOffline() bool {
+func (w *Wrapper) isOffline() bool {
 	return w.stateMachine.Current() == WRAPPER_STATE_OFFLINE
 }
 
-func (w *wrapper) startGameSession() {
+func (w *Wrapper) startGameSession() {
 	if w.gameSess != nil {
 		w.gameSess.stop()
 	}
@@ -163,7 +163,7 @@ func (w *wrapper) startGameSession() {
 	w.gameSess.start()
 }
 
-func (w *wrapper) stopGameSession() error {
+func (w *Wrapper) stopGameSession() error {
 	if w.gameSess == nil {
 		return ErrSessionAlreadyStopped
 	}
@@ -178,7 +178,7 @@ func (w *wrapper) stopGameSession() error {
 	return nil
 }
 
-func (w *wrapper) saveGameSession() error {
+func (w *Wrapper) saveGameSession() error {
 	err := w.gameSess.save()
 	if err == ErrSavingGameTimedOut {
 		// TODO: fix 'save the game' log actionable.
@@ -187,14 +187,14 @@ func (w *wrapper) saveGameSession() error {
 	return err
 }
 
-func (w *wrapper) pushUpdateToGameSession(update logUpdate) {
+func (w *Wrapper) pushUpdateToGameSession(update logUpdate) {
 	if w.gameSess == nil {
 		return
 	}
 	w.gameSess.updates <- update
 }
 
-func (w *wrapper) start(mem int) error {
+func (w *Wrapper) start(mem int) error {
 	if w.isLoading() {
 		return ErrServerAlreadyLoading
 	}
@@ -213,7 +213,7 @@ func (w *wrapper) start(mem int) error {
 	return nil
 }
 
-func (w *wrapper) stop() error {
+func (w *Wrapper) stop() error {
 	if !w.isOnline() {
 		return ErrServerAlreadyOffline
 	}
@@ -237,7 +237,7 @@ func (w *wrapper) stop() error {
 	return nil
 }
 
-func (w *wrapper) processLogLine(line string) {
+func (w *Wrapper) processLogLine(line string) {
 	if w.isOffline() {
 		return
 	}
@@ -261,7 +261,7 @@ func (w *wrapper) processLogLine(line string) {
 	}
 }
 
-func (w *wrapper) processCmdOut() {
+func (w *Wrapper) processCmdOut() {
 	for {
 		line, err := w.console.readLine()
 		if err != nil {
@@ -278,7 +278,7 @@ func (w *wrapper) processCmdOut() {
 	}
 }
 
-func (w *wrapper) pushCmd(cmd string) error {
+func (w *Wrapper) pushCmd(cmd string) error {
 	log.Printf("pushing command=%s", cmd)
 	return w.console.write(cmd)
 }
